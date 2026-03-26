@@ -1,0 +1,369 @@
+:root {
+  --bg: #f6efe4;
+  --bg-soft: #f3e7d7;
+  --ink: #1f2c2b;
+  --muted: #4f615e;
+  --accent: #c0572e;
+  --accent-deep: #934024;
+  --card: #fffdf8;
+  --line: #e5d9c6;
+  --danger: #b23333;
+  --success: #23774d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Outfit", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.page-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 12% 18%, #f7d9af 0%, transparent 35%),
+    radial-gradient(circle at 88% 10%, #f1c7a7 0%, transparent 30%),
+    radial-gradient(circle at 85% 78%, #f4dcc7 0%, transparent 25%),
+    linear-gradient(140deg, #f6efe4 0%, #f1e3cf 40%, #f8f3eb 100%);
+}
+
+.site-header {
+  width: min(1200px, 92%);
+  margin: 1rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auth-area {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.header-login-state {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+  background: #fff9ef;
+  border: 1px solid var(--line);
+  padding: 0.4rem 0.6rem;
+  border-radius: 999px;
+}
+
+.brand {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--ink);
+  font-family: "DM Serif Display", serif;
+  font-size: 1.45rem;
+}
+
+.brand-mark {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: "Outfit", sans-serif;
+  font-size: 0.75rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), #f1a05f);
+}
+
+.auth-trigger {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.7rem 1.1rem;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.auth-trigger:hover {
+  transform: translateY(-1px);
+  background: #101817;
+}
+
+main {
+  width: min(1200px, 92%);
+  margin: 1.2rem auto 2.5rem;
+  display: grid;
+  gap: 2.4rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.hero-copy {
+  background: #fffbf3cc;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 1.8rem;
+  backdrop-filter: blur(2px);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.74rem;
+  color: var(--accent-deep);
+  margin: 0;
+}
+
+.hero-copy h1 {
+  font-family: "DM Serif Display", serif;
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  line-height: 1.1;
+  margin: 0.6rem 0 0.8rem;
+}
+
+.hero-copy p {
+  margin: 0 0 1.2rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.cta {
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.68rem 1.05rem;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.hero-media img,
+.impact-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  min-height: 300px;
+}
+
+.facts h2,
+.impact h2 {
+  font-family: "DM Serif Display", serif;
+  margin: 0 0 1rem;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+}
+
+.fact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.fact-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.fact-card h3 {
+  margin: 0 0 0.45rem;
+  color: var(--danger);
+  font-family: "DM Serif Display", serif;
+}
+
+.fact-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.impact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.impact-copy {
+  background: #fff7ea;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 1.4rem;
+}
+
+.impact-copy p {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: #10181799;
+}
+
+.modal-panel {
+  position: relative;
+  width: min(540px, 94%);
+  background: #fffdf9;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 1.4rem;
+  box-shadow: 0 24px 60px #00000026;
+}
+
+.close-btn {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 0;
+  background: #f3eee3;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.modal h3 {
+  margin: 0;
+  font-family: "DM Serif Display", serif;
+}
+
+.modal-sub {
+  margin: 0.45rem 0 1rem;
+  color: var(--muted);
+}
+
+.role-options {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.role-btn,
+.submit-btn {
+  border: 0;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.stack-form {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.stack-form input {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+.stack-form select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+.stack-form small {
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+
+.verify-status {
+  min-height: 1.2rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.92rem;
+}
+
+.verify-status.error {
+  color: var(--danger);
+}
+
+.verify-status.success {
+  color: var(--success);
+}
+
+.back-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 0.8rem;
+  color: var(--accent-deep);
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .hero,
+  .impact {
+    grid-template-columns: 1fr;
+  }
+
+  .fact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .site-header {
+    margin-top: 0.7rem;
+  }
+
+  .auth-area {
+    gap: 0.45rem;
+  }
+
+  .header-login-state {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.5rem;
+  }
+
+  .brand {
+    font-size: 1.2rem;
+  }
+
+  .auth-trigger {
+    padding: 0.58rem 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .fact-grid {
+    grid-template-columns: 1fr;
+  }
+}

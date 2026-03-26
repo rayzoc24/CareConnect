@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareConnect | Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-bg" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a href="#" class="brand">
+      <span class="brand-mark">CC</span>
+      <span>CareConnect</span>
+    </a>
+    <div class="auth-area">
+      <p id="headerLoginState" class="header-login-state">Not logged in</p>
+      <button id="authTrigger" class="auth-trigger" type="button">Login/Signup</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Together We Can Change Lives</p>
+        <h1>Support dignity, not just survival.</h1>
+        <p>
+          CareConnect helps volunteers and verified foundations work together to deliver
+          food, education, medical support, and safe shelter where help is needed most.
+        </p>
+        <a href="#facts" class="cta">View Urgent Facts</a>
+      </div>
+      <div class="hero-media">
+        <img
+          src="https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=1200"
+          alt="Child sitting outdoors in difficult conditions"
+        />
+      </div>
+    </section>
+
+    <section id="facts" class="facts">
+      <h2>Sad Facts We Cannot Ignore</h2>
+      <div class="fact-grid">
+        <article class="fact-card">
+          <h3>1 in 3 Children</h3>
+          <p>Millions of children still face malnutrition, affecting growth and learning for life.</p>
+        </article>
+        <article class="fact-card">
+          <h3>No Safe Shelter</h3>
+          <p>Many families live in temporary or unsafe housing, vulnerable to weather and disease.</p>
+        </article>
+        <article class="fact-card">
+          <h3>School Dropouts</h3>
+          <p>Financial stress forces children to leave school early and work in risky conditions.</p>
+        </article>
+        <article class="fact-card">
+          <h3>Healthcare Gap</h3>
+          <p>Basic treatment is often delayed because clinics are distant or unaffordable.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="impact">
+      <div class="impact-media">
+        <img
+          src="https://images.pexels.com/photos/6994980/pexels-photo-6994980.jpeg?auto=compress&cs=tinysrgb&w=1200"
+          alt="Volunteers distributing relief material"
+        />
+      </div>
+      <div class="impact-copy">
+        <h2>When NGOs and Volunteers Act Fast, Communities Heal Faster.</h2>
+        <p>
+          Verified foundations and passionate volunteers can coordinate relief drives,
+          education support, and emergency response in one place.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <div id="authModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="authTitle">
+    <div class="modal-backdrop" data-close="true"></div>
+    <div class="modal-panel">
+      <button class="close-btn" id="closeAuth" type="button" aria-label="Close">x</button>
+
+      <section id="choiceView">
+        <h3 id="authTitle">Continue as</h3>
+        <p class="modal-sub">Choose your role to login/signup</p>
+        <div class="role-options">
+          <button id="volunteerOption" class="role-btn" type="button">Login as Volunteer</button>
+          <button id="foundationOption" class="role-btn" type="button">Login as Foundation</button>
+        </div>
+      </section>
+
+      <section id="volunteerView" class="hidden">
+        <button class="back-link" type="button" data-back="true">&larr; Back</button>
+        <h3>Volunteer Login/Signup</h3>
+        <form id="volunteerForm" class="stack-form">
+          <label for="volAction">Action</label>
+          <select id="volAction" required>
+            <option value="login">Login</option>
+            <option value="signup">Signup</option>
+          </select>
+
+          <label for="volEmail">Email</label>
+          <input id="volEmail" type="email" placeholder="you@example.com" required />
+
+          <label for="volPassword">Password</label>
+          <input id="volPassword" type="password" placeholder="Enter password" required />
+
+          <button type="submit" class="submit-btn">Continue as Volunteer</button>
+          <p id="volunteerStatus" class="verify-status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="foundationView" class="hidden">
+        <button class="back-link" type="button" data-back="true">&larr; Back</button>
+        <h3>Foundation Login/Signup</h3>
+        <p class="modal-sub">Foundation verification is done using Darpan ID.</p>
+
+        <form id="foundationForm" class="stack-form">
+          <label for="foundationAction">Action</label>
+          <select id="foundationAction" required>
+            <option value="login">Login</option>
+            <option value="signup">Signup</option>
+          </select>
+
+          <label for="orgName">Foundation Name</label>
+          <input id="orgName" type="text" placeholder="Enter foundation name" required />
+
+          <label for="darpanId">Darpan ID</label>
+          <input id="darpanId" type="text" placeholder="Example: MH/2021/0123456" required />
+          <small id="darpanHelp">Format: ST/2024/1234567 (2 letters / 4 digits / 7 digits)</small>
+
+          <label for="foundationEmail">Official Email</label>
+          <input id="foundationEmail" type="email" placeholder="official@foundation.org" required />
+
+          <label for="foundationPassword">Password</label>
+          <input id="foundationPassword" type="password" placeholder="Enter password" required />
+
+          <button type="submit" class="submit-btn">Verify and Continue</button>
+          <p id="verifyStatus" class="verify-status" aria-live="polite"></p>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
