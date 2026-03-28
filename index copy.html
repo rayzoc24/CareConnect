@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareConnect - Volunteer & Foundation Platform</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Logo/Header -->
+        <div class="header">
+            <h1 class="logo">CareConnect</h1>
+            <p class="tagline">Connect, Volunteer, and Make a Difference</p>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+
+        <!-- User Type Selection (Landing) -->
+        <div id="landingSection" class="section active">
+            <div class="card">
+                <h2>Who are you?</h2>
+                <p class="subtitle">Select your role to continue</p>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary btn-large" onclick="selectVolunteer()">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        I'm a Volunteer
+                    </button>
+                    <button class="btn btn-secondary btn-large" onclick="selectFoundation()">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                        I'm a Foundation
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Volunteer Section -->
+        <div id="volunteerSection" class="section">
+            <!-- Volunteer Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showVolunteerLogin()">Login</button>
+                <button class="tab-btn" onclick="showVolunteerRegister()">Register</button>
+                <button class="back-btn" onclick="backToLanding()">← Back</button>
+            </div>
+
+            <!-- Volunteer Login Form -->
+            <div id="volunteerLoginForm" class="form-container active">
+                <div class="card">
+                    <h2>Volunteer Login</h2>
+                    <form onsubmit="handleVolunteerLogin(event)">
+                        <div class="form-group">
+                            <label for="vol-login-email">Email Address</label>
+                            <input 
+                                type="email" 
+                                id="vol-login-email" 
+                                placeholder="Enter your email"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="vol-login-password">Password</label>
+                            <input 
+                                type="password" 
+                                id="vol-login-password" 
+                                placeholder="Enter your password"
+                                required
+                            >
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Login</button>
+
+                        <div class="form-message" id="volunteerLoginMessage"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Volunteer Register Form -->
+            <div id="volunteerRegisterForm" class="form-container">
+                <div class="card">
+                    <h2>Volunteer Registration</h2>
+                    <form onsubmit="handleVolunteerRegister(event)">
+                        <div class="form-group">
+                            <label for="vol-reg-name">Full Name <span class="required">*</span></label>
+                            <input 
+                                type="text" 
+                                id="vol-reg-name" 
+                                placeholder="Enter your full name"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="vol-reg-email">Email ID <span class="required">*</span></label>
+                            <input 
+                                type="email" 
+                                id="vol-reg-email" 
+                                placeholder="Enter your email"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="vol-reg-phone">Phone Number <span class="optional">(Optional)</span></label>
+                            <input 
+                                type="tel" 
+                                id="vol-reg-phone" 
+                                placeholder="Enter your phone number"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="vol-reg-locality">Locality <span class="required">*</span></label>
+                            <input 
+                                type="text" 
+                                id="vol-reg-locality" 
+                                placeholder="e.g., Thane, Mumbai"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="vol-reg-password">Password <span class="required">*</span></label>
+                            <input 
+                                type="password" 
+                                id="vol-reg-password" 
+                                placeholder="Min. 6 characters"
+                                required
+                            >
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Register</button>
+
+                        <div class="form-message" id="volunteerRegisterMessage"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Foundation Section -->
+        <div id="foundationSection" class="section">
+            <!-- Foundation Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showFoundationLogin()">Login</button>
+                <button class="tab-btn" onclick="showFoundationRegister()">Register</button>
+                <button class="back-btn" onclick="backToLanding()">← Back</button>
+            </div>
+
+            <!-- Foundation Login Form -->
+            <div id="foundationLoginForm" class="form-container active">
+                <div class="card">
+                    <h2>Foundation Login</h2>
+                    <form onsubmit="handleFoundationLogin(event)">
+                        <div class="form-group">
+                            <label for="found-login-id">NGO Darpan ID or Email <span class="required">*</span></label>
+                            <input 
+                                type="text" 
+                                id="found-login-id" 
+                                placeholder="Enter NGO Darpan ID or Email"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="found-login-password">Password <span class="required">*</span></label>
+                            <input 
+                                type="password" 
+                                id="found-login-password" 
+                                placeholder="Enter your password"
+                                required
+                            >
+                        </div>
+
+                        <button type="submit" class="btn btn-secondary btn-block">Login</button>
+
+                        <div class="form-message" id="foundationLoginMessage"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Foundation Register Form -->
+            <div id="foundationRegisterForm" class="form-container">
+                <div class="card">
+                    <h2>Foundation Registration</h2>
+                    <form onsubmit="handleFoundationRegister(event)">
+                        <div class="form-group">
+                            <label for="found-reg-name">Foundation Name <span class="required">*</span></label>
+                            <input 
+                                type="text" 
+                                id="found-reg-name" 
+                                placeholder="Enter foundation name"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="found-reg-darpan">NGO Darpan ID <span class="required">*</span></label>
+                            <input 
+                                type="text" 
+                                id="found-reg-darpan" 
+                                placeholder="e.g., DRP20230001"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="found-reg-pan">NGO PAN Number <span class="required">*</span></label>
+                            <input 
+                                type="text" 
+                                id="found-reg-pan" 
+                                placeholder="e.g., AAATL1234A"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="found-reg-certificate">Upload Certificate <span class="required">*</span></label>
+                            <input 
+                                type="file" 
+                                id="found-reg-certificate" 
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                required
+                            >
+                            <small class="file-hint">Accepted formats: PDF, JPG, PNG (Max 5MB)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="found-reg-password">Password <span class="required">*</span></label>
+                            <input 
+                                type="password" 
+                                id="found-reg-password" 
+                                placeholder="Min. 6 characters"
+                                required
+                            >
+                        </div>
+
+                        <button type="submit" class="btn btn-secondary btn-block">Register</button>
+
+                        <div class="form-message" id="foundationRegisterMessage"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <div id="successModal" class="modal">
+            <div class="modal-content">
+                <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <h3 id="successTitle">Success!</h3>
+                <p id="successMessage"></p>
+                <button class="btn btn-primary" onclick="closeSuccessModal()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyASBFzB8ENUgr9Qj4JHD05YIEVkgB6-EbU",
+            authDomain: "care-connect-37f6e.firebaseapp.com",
+            projectId: "care-connect-37f6e",
+            storageBucket: "care-connect-37f6e.firebasestorage.app",
+            messagingSenderId: "992604285549",
+            appId: "1:992604285549:web:f3a9a2c1fc3944dc08ad64",
+            databaseURL: "https://care-connect-37f6e-default-rtdb.firebaseio.com"
+        };
+
+        try {
+            console.log('🔧 Initializing Firebase with config:', firebaseConfig.projectId);
+            
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+
+            console.log('✅ Firebase initialized successfully');
+            console.log('📦 Auth:', typeof auth);
+            console.log('🗄️ Firestore DB:', typeof db);
+
+            // Make Firebase services globally available
+            window.firebaseServices = {
+                auth,
+                db,
+                createUserWithEmailAndPassword,
+                signInWithEmailAndPassword,
+                collection,
+                addDoc,
+                query,
+                where,
+                getDocs,
+                initialized: true
+            };
+
+            console.log('✅ All Firebase services exported to window.firebaseServices');
+        } catch (error) {
+            console.error('❌ Firebase initialization error:', error);
+            console.error('Error code:', error.code);
+            console.error('Error message:', error.message);
+            window.firebaseServices = { initialized: false, error };
+        }
+    </script>
+
+    <script src="script.js" defer></script>
+</body>
+</html>
