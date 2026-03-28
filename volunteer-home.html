@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareConnect | Volunteer Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="dashboard-styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1 class="brand">CareConnect Volunteer</h1>
+      <div class="inline">
+        <span id="userMeta" class="user-meta"></span>
+        <button id="logoutBtn" class="btn btn-muted" type="button">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid">
+      <article class="card">
+        <h2>Create New Issue</h2>
+        <p class="small">Add issue type, description, photo proof, and hashtags to improve visibility.</p>
+        <form id="issueForm" class="form-grid">
+          <input id="issueTitle" type="text" placeholder="Issue title" required />
+          <select id="issueCategory" required>
+            <option value="">Select issue type</option>
+            <option>Infrastructure</option>
+            <option>Education</option>
+            <option>Healthcare</option>
+            <option>Food</option>
+            <option>Environment</option>
+            <option>Safety</option>
+            <option>Other</option>
+          </select>
+          <select id="issueNgo" required></select>
+          <textarea id="issueDescription" placeholder="Describe the issue clearly" required></textarea>
+          <input id="issueTags" type="text" placeholder="Hashtags, e.g. #water #urgent #safety" />
+          <input id="issuePhoto" type="file" accept="image/*" required />
+          <button class="btn btn-primary" type="submit">Publish Issue</button>
+          <p id="issueFormStatus" class="small"></p>
+        </form>
+      </article>
+
+      <article class="card">
+        <h2>Donate to NGO</h2>
+        <form id="donateForm" class="form-grid">
+          <select id="donateNgo" required></select>
+          <input id="donateAmount" type="number" min="1" step="1" placeholder="Amount in INR" required />
+          <input id="donateNote" type="text" placeholder="Optional note" />
+          <button class="btn btn-primary" type="submit">Donate</button>
+          <p id="donateStatus" class="small"></p>
+        </form>
+      </article>
+    </section>
+
+    <section class="card" style="margin-top: 1rem;">
+      <h2>Open Issues (priority: hashtags + votes)</h2>
+      <div id="issuesList" class="list"></div>
+    </section>
+
+    <section class="card" style="margin-top: 1rem;">
+      <h2>NGO Directory</h2>
+      <p class="small">View NGO type, volunteers count, website and social handles.</p>
+      <div id="ngoList" class="ngo-cards"></div>
+    </section>
+  </main>
+
+  <script src="app-data.js"></script>
+  <script src="volunteer-home.js"></script>
+</body>
+</html>

@@ -1,3 +1,213 @@
+// ===== Validation Functions =====
+class Validator {
+    static validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    static validatePassword(password) {
+        return password.length >= 6;
+    }
+
+    static validatePhone(phone) {
+        return phone === '' || /^\d{10}$/.test(phone);
+    }
+
+    static validateDarpanId(id) {
+        return /^[A-Z]{2}\/\d{4}\/\d{7}$/.test((id || '').trim().toUpperCase());
+    }
+}
+
+// ===== UI Helper Functions =====
+function showMessage(elementId, message, type = 'error') {
+    const messageElement = document.getElementById(elementId);
+    if (messageElement) {
+        messageElement.textContent = message;
+        messageElement.className = `verify-status show ${type}`;
+        setTimeout(() => {
+            messageElement.classList.remove('show');
+        }, 4000);
+    }
+}
+
+function showLoading() {
+    console.log('Loading...');
+}
+
+function hideLoading() {
+    console.log('Loading complete');
+}
+
+// ===== Volunteer Login Handler =====
+async function handleVolunteerLogin(email, password) {
+    if (!email || !password) {
+        showMessage('volunteerStatus', 'Please fill in all fields', 'error');
+        return;
+    }
+
+    if (!Validator.validateEmail(email)) {
+        showMessage('volunteerStatus', 'Please enter a valid email', 'error');
+        return;
+    }
+
+    showLoading();
+
+    try {
+        const volunteer = window.mockAuth.loginVolunteer(email, password);
+        console.log('✅ Volunteer signed in:', volunteer.uid);
+        
+        document.getElementById('headerLoginState').textContent = `Logged in as Volunteer (${volunteer.name})`;
+        document.getElementById('authTrigger').textContent = 'Logout';
+        
+        sessionStorage.setItem('currentUser', JSON.stringify({
+            uid: volunteer.uid,
+            role: 'volunteer',
+            name: volunteer.name,
+            email: volunteer.email
+        }));
+
+        hideLoading();
+        closeModal();
+        showMessage('volunteerStatus', `Welcome back, ${volunteer.name}!`, 'success');
+        setTimeout(() => {
+            redirectToRoleHome({ role: 'volunteer' });
+        }, 300);
+    } catch (error) {
+        hideLoading();
+        console.error('❌ Volunteer login error:', error.message);
+        showMessage('volunteerStatus', error.message || 'Login failed', 'error');
+    }
+}
+
+// ===== Volunteer Register Handler =====
+async function handleVolunteerRegister(name, email, phone, password) {
+    if (!name || !email || !password) {
+        showMessage('volunteerRegisterStatus', 'Please fill in all required fields', 'error');
+        return;
+    }
+
+    if (!Validator.validateEmail(email)) {
+        showMessage('volunteerRegisterStatus', 'Please enter a valid email', 'error');
+        return;
+    }
+
+    if (!Validator.validatePassword(password)) {
+        showMessage('volunteerRegisterStatus', 'Password must be at least 6 characters', 'error');
+        return;
+    }
+
+    if (phone && !Validator.validatePhone(phone)) {
+        showMessage('volunteerRegisterStatus', 'Phone number must be 10 digits', 'error');
+        return;
+    }
+
+    showLoading();
+
+    try {
+        const volunteer = window.mockAuth.registerVolunteer(name, email, phone, password);
+        hideLoading();
+        showMessage('volunteerRegisterStatus', `Welcome ${name}! Your account has been created. You can now login.`, 'success');
+        
+        setTimeout(() => {
+            document.getElementById('volunteerForm').style.display = 'block';
+            document.getElementById('volunteerRegisterForm').style.display = 'none';
+            document.getElementById('toggleVolunteerForms').textContent = 'Create new volunteer account';
+            document.getElementById('volunteerForm').reset();
+            document.getElementById('volunteerRegisterForm').reset();
+        }, 1500);
+    } catch (error) {
+        hideLoading();
+        console.error('❌ Volunteer registration error:', error.message);
+        showMessage('volunteerRegisterStatus', error.message || 'Registration failed', 'error');
+    }
+}
+
+// ===== Foundation Login Handler =====
+async function handleFoundationLogin(email, password) {
+    if (!email || !password) {
+        showMessage('foundationLoginStatus', 'Please fill in all fields', 'error');
+        return;
+    }
+
+    if (!Validator.validateEmail(email)) {
+        showMessage('foundationLoginStatus', 'Please enter a valid email', 'error');
+        return;
+    }
+
+    showLoading();
+
+    try {
+        const foundation = window.mockAuth.loginFoundation(email, password);
+        console.log('✅ Foundation signed in:', foundation.uid);
+
+        document.getElementById('headerLoginState').textContent = `Logged in as Foundation (${foundation.name})`;
+        document.getElementById('authTrigger').textContent = 'Logout';
+        
+        sessionStorage.setItem('currentUser', JSON.stringify({
+            uid: foundation.uid,
+            role: 'foundation',
+            name: foundation.name,
+            email: foundation.email,
+            darpanId: foundation.darpanId
+        }));
+
+        hideLoading();
+        closeModal();
+        showMessage('foundationLoginStatus', `Welcome back, ${foundation.name}!`, 'success');
+        setTimeout(() => {
+            redirectToRoleHome({ role: 'foundation' });
+        }, 300);
+    } catch (error) {
+        hideLoading();
+        console.error('❌ Foundation login error:', error.message);
+        showMessage('foundationLoginStatus', error.message || 'Login failed', 'error');
+    }
+}
+
+// ===== Foundation Register Handler =====
+async function handleFoundationRegister(name, darpanId, email, password) {
+    if (!name || !darpanId || !email || !password) {
+        showMessage('foundationRegisterStatus', 'Please fill in all required fields', 'error');
+        return;
+    }
+
+    if (!Validator.validateDarpanId(darpanId)) {
+        showMessage('foundationRegisterStatus', 'Please enter a valid Darpan ID (format: ST/2024/1234567)', 'error');
+        return;
+    }
+
+    if (!Validator.validateEmail(email)) {
+        showMessage('foundationRegisterStatus', 'Please enter a valid email', 'error');
+        return;
+    }
+
+    if (!Validator.validatePassword(password)) {
+        showMessage('foundationRegisterStatus', 'Password must be at least 6 characters', 'error');
+        return;
+    }
+
+    showLoading();
+
+    try {
+        const foundation = window.mockAuth.registerFoundation(name, darpanId, email, password);
+        hideLoading();
+        showMessage('foundationRegisterStatus', `Welcome ${name}! Your foundation has been registered. You can now login.`, 'success');
+        
+        setTimeout(() => {
+            document.getElementById('foundationLoginForm').style.display = 'block';
+            document.getElementById('foundationRegisterForm').style.display = 'none';
+            document.getElementById('toggleFoundationForms').textContent = 'Create new foundation account';
+            document.getElementById('foundationLoginForm').reset();
+            document.getElementById('foundationRegisterForm').reset();
+        }, 1500);
+    } catch (error) {
+        hideLoading();
+        console.error('❌ Foundation registration error:', error.message);
+        showMessage('foundationRegisterStatus', error.message || 'Registration failed', 'error');
+    }
+}
+
+// ===== Modal Functions =====
 const authTrigger = document.getElementById("authTrigger");
 const authModal = document.getElementById("authModal");
 const closeAuth = document.getElementById("closeAuth");
@@ -7,189 +217,219 @@ const choiceView = document.getElementById("choiceView");
 const volunteerView = document.getElementById("volunteerView");
 const foundationView = document.getElementById("foundationView");
 const backButtons = document.querySelectorAll("[data-back='true']");
-const volunteerForm = document.getElementById("volunteerForm");
-const volunteerStatus = document.getElementById("volunteerStatus");
-const foundationForm = document.getElementById("foundationForm");
-const verifyStatus = document.getElementById("verifyStatus");
 const headerLoginState = document.getElementById("headerLoginState");
+const goDashboardBtn = document.getElementById("goDashboard");
 
 let currentUser = null;
+let logoutClickGuard = false;
+
+function redirectToRoleHome(user) {
+    if (!user || !user.role) {
+        return;
+    }
+    if (user.role === 'volunteer') {
+        window.location.href = 'volunteer-home.html';
+        return;
+    }
+    if (user.role === 'foundation') {
+        window.location.href = 'ngo-home.html';
+    }
+}
 
 function showModal() {
-  authModal.classList.add("show");
-  authModal.setAttribute("aria-hidden", "false");
-  showChoiceView();
+    authModal.classList.add("show");
+    authModal.setAttribute("aria-hidden", "false");
+    showChoiceView();
 }
 
 function closeModal() {
-  authModal.classList.remove("show");
-  authModal.setAttribute("aria-hidden", "true");
+    authModal.classList.remove("show");
+    authModal.setAttribute("aria-hidden", "true");
 }
 
 function showChoiceView() {
-  choiceView.classList.remove("hidden");
-  volunteerView.classList.add("hidden");
-  foundationView.classList.add("hidden");
-  verifyStatus.textContent = "";
-  verifyStatus.className = "verify-status";
-  volunteerStatus.textContent = "";
-  volunteerStatus.className = "verify-status";
+    choiceView.classList.remove("hidden");
+    volunteerView.classList.add("hidden");
+    foundationView.classList.add("hidden");
+    document.getElementById('volunteerStatus').textContent = '';
+    document.getElementById('foundationLoginStatus').textContent = '';
+    document.getElementById('foundationRegisterStatus').textContent = '';
 }
 
 function showVolunteerView() {
-  choiceView.classList.add("hidden");
-  volunteerView.classList.remove("hidden");
-  foundationView.classList.add("hidden");
+    choiceView.classList.add("hidden");
+    volunteerView.classList.remove("hidden");
+    foundationView.classList.add("hidden");
+    document.getElementById('volunteerStatus').textContent = '';
 }
 
 function showFoundationView() {
-  choiceView.classList.add("hidden");
-  volunteerView.classList.add("hidden");
-  foundationView.classList.remove("hidden");
+    choiceView.classList.add("hidden");
+    volunteerView.classList.add("hidden");
+    foundationView.classList.remove("hidden");
+    document.getElementById('foundationLoginStatus').textContent = '';
 }
 
 function updateHeaderState() {
-  if (currentUser) {
-    const role = currentUser.role === "foundation" ? "Foundation" : "Volunteer";
-    const namePart = currentUser.orgName ? ` (${currentUser.orgName})` : "";
-    headerLoginState.textContent = `Logged in as ${role}${namePart}`;
-    authTrigger.textContent = "Account";
-  } else {
-    headerLoginState.textContent = "Not logged in";
-    authTrigger.textContent = "Login/Signup";
-  }
+    const user = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+    if (user) {
+        const role = user.role === 'foundation' ? 'Foundation' : 'Volunteer';
+        const namePart = user.name ? ` (${user.name})` : '';
+        headerLoginState.textContent = `Logged in as ${role}${namePart}`;
+        authTrigger.textContent = 'Logout';
+        currentUser = user;
+    } else {
+        headerLoginState.textContent = 'Not logged in';
+        authTrigger.textContent = 'Login';
+        currentUser = null;
+    }
 }
 
-async function loadSession() {
-  try {
-    const response = await fetch("/api/auth/me");
-    const data = await parseJsonResponse(response);
-    currentUser = data.user;
-    updateHeaderState();
-  } catch (error) {
-    currentUser = null;
-    updateHeaderState();
-  }
-}
+// Event Listeners
+authTrigger.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
 
-async function parseJsonResponse(response) {
-  const raw = await response.text();
+    if (logoutClickGuard) {
+        return;
+    }
 
-  try {
-    return raw ? JSON.parse(raw) : {};
-  } catch (error) {
-    throw new Error("Server returned a non-JSON response. Make sure app is running on http://localhost:3000 using npm start.");
-  }
-}
+    if (currentUser) {
+        logoutClickGuard = true;
+        sessionStorage.removeItem('currentUser');
+        updateHeaderState();
+        closeModal();
+        setTimeout(() => {
+            logoutClickGuard = false;
+        }, 300);
+        return;
+    } else {
+        showModal();
+    }
+});
 
-async function submitAuth(endpoint, payload) {
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
-
-  const data = await parseJsonResponse(response);
-  if (!response.ok) {
-    const backendMessage = data.error || data.message;
-    throw new Error(backendMessage || `Authentication failed (HTTP ${response.status})`);
-  }
-  return data;
-}
-
-// Basic Darpan format check: ST/YYYY/XXXXXXX
-function isValidDarpanId(id) {
-  const darpanPattern = /^[A-Z]{2}\/\d{4}\/\d{7}$/;
-  return darpanPattern.test(id.trim().toUpperCase());
-}
-
-authTrigger.addEventListener("click", showModal);
 closeAuth.addEventListener("click", closeModal);
 
 authModal.addEventListener("click", (event) => {
-  if (event.target.dataset.close === "true") {
-    closeModal();
-  }
+    if (event.target.dataset.close === "true") {
+        closeModal();
+    }
 });
 
 volunteerOption.addEventListener("click", showVolunteerView);
 foundationOption.addEventListener("click", showFoundationView);
 
 backButtons.forEach((button) => {
-  button.addEventListener("click", showChoiceView);
+    button.addEventListener("click", showChoiceView);
 });
 
-volunteerForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  volunteerStatus.textContent = "Processing...";
-  volunteerStatus.className = "verify-status";
-
-  try {
-    const action = document.getElementById("volAction").value;
-    const email = document.getElementById("volEmail").value;
-    const password = document.getElementById("volPassword").value;
-    const result = await submitAuth("/api/auth/volunteer", {
-      action,
-      email,
-      password
+if (goDashboardBtn) {
+    goDashboardBtn.addEventListener('click', () => {
+        const user = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+        if (!user) {
+            showModal();
+            return;
+        }
+        redirectToRoleHome(user);
     });
+}
 
-    currentUser = result.user;
-    updateHeaderState();
-    volunteerStatus.textContent = result.message + " Website now shows logged in.";
-    volunteerStatus.className = "verify-status success";
-    setTimeout(closeModal, 700);
-  } catch (error) {
-    volunteerStatus.textContent = error.message;
-    volunteerStatus.className = "verify-status error";
-  }
-});
-
-foundationForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const action = document.getElementById("foundationAction").value;
-  const orgName = document.getElementById("orgName").value.trim();
-  const darpanInput = document.getElementById("darpanId");
-  const formattedId = darpanInput.value.trim().toUpperCase();
-  const email = document.getElementById("foundationEmail").value;
-  const passwordInput = document.getElementById("foundationPassword");
-  const password = passwordInput.value;
-
-  if (!isValidDarpanId(formattedId)) {
-    verifyStatus.textContent = "Invalid Darpan ID format. Please use ST/YYYY/XXXXXXX.";
-    verifyStatus.className = "verify-status error";
-    return;
-  }
-
-  verifyStatus.textContent = "Processing...";
-  verifyStatus.className = "verify-status";
-
-  try {
-    const result = await submitAuth("/api/auth/foundation", {
-      action,
-      orgName,
-      darpanId: formattedId,
-      email,
-      password
+// Volunteer Login Form
+const volunteerForm = document.getElementById("volunteerForm");
+if (volunteerForm) {
+    volunteerForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const email = document.getElementById("volEmail").value.trim();
+        const password = document.getElementById("volPassword").value;
+        handleVolunteerLogin(email, password);
     });
+}
 
-    currentUser = result.user;
-    updateHeaderState();
-    verifyStatus.textContent = result.message + " Website now shows logged in.";
-    verifyStatus.className = "verify-status success";
-    setTimeout(closeModal, 700);
-  } catch (error) {
-    verifyStatus.textContent = error.message;
-    verifyStatus.className = "verify-status error";
-  }
-});
+// Volunteer Register Form
+const volunteerRegisterForm = document.getElementById("volunteerRegisterForm");
+if (volunteerRegisterForm) {
+    volunteerRegisterForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = document.getElementById("volRegName").value.trim();
+        const email = document.getElementById("volRegEmail").value.trim();
+        const phone = document.getElementById("volRegPhone").value.trim();
+        const password = document.getElementById("volRegPassword").value;
+        handleVolunteerRegister(name, email, phone, password);
+    });
+}
 
+// Toggle Volunteer Forms
+const toggleVolunteerBtn = document.getElementById('toggleVolunteerForms');
+if (toggleVolunteerBtn) {
+    toggleVolunteerBtn.addEventListener('click', () => {
+        const loginForm = document.getElementById('volunteerForm');
+        const registerForm = document.getElementById('volunteerRegisterForm');
+        
+        if (loginForm.style.display === 'none') {
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            toggleVolunteerBtn.textContent = 'Create new volunteer account';
+        } else {
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            toggleVolunteerBtn.textContent = 'Already have an account? Login';
+        }
+    });
+}
+
+// Foundation Login Form
+const foundationLoginForm = document.getElementById("foundationLoginForm");
+if (foundationLoginForm) {
+    foundationLoginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const email = document.getElementById("foundEmail").value.trim();
+        const password = document.getElementById("foundPassword").value;
+        handleFoundationLogin(email, password);
+    });
+}
+
+// Foundation Register Form
+const foundationRegisterForm = document.getElementById("foundationRegisterForm");
+if (foundationRegisterForm) {
+    foundationRegisterForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = document.getElementById("foundRegName").value.trim();
+        const darpanId = document.getElementById("foundRegDarpan").value.trim();
+        const email = document.getElementById("foundRegEmail").value.trim();
+        const password = document.getElementById("foundRegPassword").value;
+        handleFoundationRegister(name, darpanId, email, password);
+    });
+}
+
+// Toggle Foundation Forms
+const toggleFoundationBtn = document.getElementById('toggleFoundationForms');
+if (toggleFoundationBtn) {
+    toggleFoundationBtn.addEventListener('click', () => {
+        const loginForm = document.getElementById('foundationLoginForm');
+        const registerForm = document.getElementById('foundationRegisterForm');
+        
+        if (loginForm.style.display === 'none') {
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            toggleFoundationBtn.textContent = 'Create new foundation account';
+        } else {
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            toggleFoundationBtn.textContent = 'Already have an account? Login';
+        }
+    });
+}
+
+// Handle Escape key
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && authModal.classList.contains("show")) {
-    closeModal();
-  }
+    if (event.key === "Escape" && authModal.classList.contains("show")) {
+        closeModal();
+    }
 });
 
-loadSession();
+// Initialize
+document.addEventListener("DOMContentLoaded", () => {
+    console.log('🚀 Page loaded, initializing auth...');
+    updateHeaderState();
+    console.log('✅ Auth initialized successfully');
+});

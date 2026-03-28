@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareConnect | NGO Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="dashboard-styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1 class="brand">CareConnect NGO Dashboard</h1>
+      <div class="inline">
+        <span id="userMeta" class="user-meta"></span>
+        <button id="logoutBtn" class="btn btn-muted" type="button">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid">
+      <article class="card">
+        <h2>Issue Queue</h2>
+        <p class="small">Review community issues and update status.</p>
+        <div id="ngoIssues" class="list"></div>
+      </article>
+
+      <article class="card">
+        <h2>Incoming Donations</h2>
+        <div id="donationList" class="list"></div>
+      </article>
+    </section>
+
+    <section class="card" style="margin-top: 1rem;">
+      <h2>Registered NGOs</h2>
+      <div id="ngoCards" class="ngo-cards"></div>
+    </section>
+  </main>
+
+  <script src="app-data.js"></script>
+  <script src="ngo-home.js"></script>
+</body>
+</html>

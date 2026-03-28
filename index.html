@@ -6,77 +6,130 @@
   <title>CareConnect | Home</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script>
+    // Add your Firebase project config here to enable Firestore sync.
+    // Example keys: apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId
+    window.CARECONNECT_FIREBASE_CONFIG = window.CARECONNECT_FIREBASE_CONFIG || null;
+  </script>
 </head>
 <body>
   <div class="page-bg" aria-hidden="true"></div>
 
   <header class="site-header">
-    <a href="#" class="brand">
-      <span class="brand-mark">CC</span>
-      <span>CareConnect</span>
-    </a>
-    <div class="auth-area">
-      <p id="headerLoginState" class="header-login-state">Not logged in</p>
-      <button id="authTrigger" class="auth-trigger" type="button">Login/Signup</button>
+    <div class="topbar">
+      <a href="#" class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" role="img" aria-label="CareConnect logo">
+            <path d="M12 20s-6-3.9-8.5-7.4A5 5 0 0 1 11 6l1 1 1-1a5 5 0 0 1 7.5 6.6C18 16.1 12 20 12 20z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong>CareConnect</strong>
+          <small>BY TEAM SUPERNOVA</small>
+        </span>
+      </a>
+
+      <nav class="main-nav" aria-label="Primary navigation">
+        <a href="#" class="nav-link">NGO Dashboard</a>
+        <a href="#" class="nav-link">Directory</a>
+      </nav>
+
+      <div class="auth-area">
+        <p id="headerLoginState" class="header-login-state">Not logged in</p>
+        <button id="authTrigger" class="auth-trigger" type="button">Login</button>
+        <button class="header-icon-btn" type="button" aria-label="Open account options">&#8594;</button>
+      </div>
     </div>
   </header>
 
-  <main>
+  <main class="landing">
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Together We Can Change Lives</p>
-        <h1>Support dignity, not just survival.</h1>
+        <p class="eyebrow">EMPOWERING COMMUNITIES</p>
+        <h1>
+          Connect. Solve.<br />
+          <span>Thrive Together.</span>
+        </h1>
         <p>
-          CareConnect helps volunteers and verified foundations work together to deliver
-          food, education, medical support, and safe shelter where help is needed most.
+          CareConnect is the bridge between citizens facing community challenges and the NGOs
+          equipped to solve them. Report issues, rally support, and track real-world impact.
         </p>
-        <a href="#facts" class="cta">View Urgent Facts</a>
-      </div>
-      <div class="hero-media">
-        <img
-          src="https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=1200"
-          alt="Child sitting outdoors in difficult conditions"
-        />
+        <button id="goDashboard" class="cta" type="button">Go to Dashboard &#8594;</button>
       </div>
     </section>
 
-    <section id="facts" class="facts">
-      <h2>Sad Facts We Cannot Ignore</h2>
-      <div class="fact-grid">
-        <article class="fact-card">
-          <h3>1 in 3 Children</h3>
-          <p>Millions of children still face malnutrition, affecting growth and learning for life.</p>
-        </article>
-        <article class="fact-card">
-          <h3>No Safe Shelter</h3>
-          <p>Many families live in temporary or unsafe housing, vulnerable to weather and disease.</p>
-        </article>
-        <article class="fact-card">
-          <h3>School Dropouts</h3>
-          <p>Financial stress forces children to leave school early and work in risky conditions.</p>
-        </article>
-        <article class="fact-card">
-          <h3>Healthcare Gap</h3>
-          <p>Basic treatment is often delayed because clinics are distant or unaffordable.</p>
-        </article>
+    <section class="impact-stats">
+      <h2>Our Impact</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">1,247<span class="stat-suffix">+</span></div>
+          <div class="stat-label">NGOs Registered</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">8,562<span class="stat-suffix">+</span></div>
+          <div class="stat-label">Problems Solved</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">340<span class="stat-suffix">+</span></div>
+          <div class="stat-label">Pending Issues</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">45,893<span class="stat-suffix">+</span></div>
+          <div class="stat-label">Citizens Helped</div>
+        </div>
       </div>
     </section>
 
-    <section class="impact">
-      <div class="impact-media">
-        <img
-          src="https://images.pexels.com/photos/6994980/pexels-photo-6994980.jpeg?auto=compress&cs=tinysrgb&w=1200"
-          alt="Volunteers distributing relief material"
-        />
-      </div>
-      <div class="impact-copy">
-        <h2>When NGOs and Volunteers Act Fast, Communities Heal Faster.</h2>
+    <section class="reality-check" aria-labelledby="realityTitle">
+      <div class="reality-head">
+        <p class="eyebrow">WHY THIS WORK MATTERS</p>
+        <h2 id="realityTitle">Reality Check: The Need Is Still Huge</h2>
         <p>
-          Verified foundations and passionate volunteers can coordinate relief drives,
-          education support, and emergency response in one place.
+          Behind every reported issue is a family waiting for clean water, safety, food, and dignity.
+          These numbers are reminders that every volunteer hour and every NGO response counts.
         </p>
+      </div>
+
+      <div class="reality-grid">
+        <article class="fact-card">
+          <img
+            src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80"
+            alt="Children waiting with water containers"
+            loading="lazy"
+          />
+          <div class="fact-copy">
+            <p class="fact-number">2 billion people</p>
+            <p class="fact-text">still do not have safely managed drinking water at home.</p>
+          </div>
+        </article>
+
+        <article class="fact-card">
+          <img
+            src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80"
+            alt="Child receiving food support"
+            loading="lazy"
+          />
+          <div class="fact-copy">
+            <p class="fact-number">735 million people</p>
+            <p class="fact-text">faced chronic hunger in 2022 globally.</p>
+          </div>
+        </article>
+
+        <article class="fact-card">
+          <img
+            src="https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80"
+            alt="Flooded settlement after climate disaster"
+            loading="lazy"
+          />
+          <div class="fact-copy">
+            <p class="fact-number">1 in 10 children</p>
+            <p class="fact-text">live in areas of high or extremely high water stress.</p>
+          </div>
+        </article>
       </div>
     </section>
   </main>
@@ -91,63 +144,95 @@
         <p class="modal-sub">Choose your role to login/signup</p>
         <div class="role-options">
           <button id="volunteerOption" class="role-btn" type="button">Login as Volunteer</button>
-          <button id="foundationOption" class="role-btn" type="button">Login as Foundation</button>
+          <button id="foundationOption" class="role-btn" type="button">Login as NGO Foundation</button>
         </div>
       </section>
 
       <section id="volunteerView" class="hidden">
         <button class="back-link" type="button" data-back="true">&larr; Back</button>
-        <h3>Volunteer Login/Signup</h3>
-        <form id="volunteerForm" class="stack-form">
-          <label for="volAction">Action</label>
-          <select id="volAction" required>
-            <option value="login">Login</option>
-            <option value="signup">Signup</option>
-          </select>
+        <h3>Volunteer Login</h3>
+        <p class="modal-sub">Sign in to your volunteer account</p>
 
+        <form id="volunteerForm" class="stack-form">
           <label for="volEmail">Email</label>
           <input id="volEmail" type="email" placeholder="you@example.com" required />
 
-          <label for="volPassword">Password</label>
-          <input id="volPassword" type="password" placeholder="Enter password" required />
+          <label for="volPhone">Phone (Optional)</label>
+          <input id="volPhone" type="tel" placeholder="Your 10-digit phone number" />
 
-          <button type="submit" class="submit-btn">Continue as Volunteer</button>
+          <label for="volPassword">Password</label>
+          <input id="volPassword" type="password" placeholder="At least 6 characters" required />
+
+          <button type="submit" class="submit-btn">Login as Volunteer</button>
           <p id="volunteerStatus" class="verify-status" aria-live="polite"></p>
         </form>
+
+        <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #d6e3f0;">
+        <p style="text-align: center; font-size: 0.9rem; color: #666; margin-bottom: 1rem;">New volunteer?</p>
+
+        <form id="volunteerRegisterForm" class="stack-form" style="display:none;">
+          <label for="volRegName">Full Name</label>
+          <input id="volRegName" type="text" placeholder="Your full name" required />
+
+          <label for="volRegEmail">Email</label>
+          <input id="volRegEmail" type="email" placeholder="you@example.com" required />
+
+          <label for="volRegPhone">Phone (Optional)</label>
+          <input id="volRegPhone" type="tel" placeholder="10-digit phone number" />
+
+          <label for="volRegPassword">Password</label>
+          <input id="volRegPassword" type="password" placeholder="At least 6 characters" required />
+
+          <button type="submit" class="submit-btn">Register as Volunteer</button>
+          <p id="volunteerRegisterStatus" class="verify-status" aria-live="polite"></p>
+        </form>
+
+        <button type="button" id="toggleVolunteerForms" class="back-link" style="margin-top: 1rem;">Create new volunteer account</button>
       </section>
 
       <section id="foundationView" class="hidden">
         <button class="back-link" type="button" data-back="true">&larr; Back</button>
-        <h3>Foundation Login/Signup</h3>
-        <p class="modal-sub">Foundation verification is done using Darpan ID.</p>
+        <h3>Foundation Login</h3>
+        <p class="modal-sub">Login using your email</p>
 
-        <form id="foundationForm" class="stack-form">
-          <label for="foundationAction">Action</label>
-          <select id="foundationAction" required>
-            <option value="login">Login</option>
-            <option value="signup">Signup</option>
-          </select>
+        <form id="foundationLoginForm" class="stack-form">
+          <label for="foundEmail">Email</label>
+          <input id="foundEmail" type="email" placeholder="foundation@org.com" required />
 
-          <label for="orgName">Foundation Name</label>
-          <input id="orgName" type="text" placeholder="Enter foundation name" required />
+          <label for="foundPassword">Password</label>
+          <input id="foundPassword" type="password" placeholder="Enter password" required />
 
-          <label for="darpanId">Darpan ID</label>
-          <input id="darpanId" type="text" placeholder="Example: MH/2021/0123456" required />
-          <small id="darpanHelp">Format: ST/2024/1234567 (2 letters / 4 digits / 7 digits)</small>
-
-          <label for="foundationEmail">Official Email</label>
-          <input id="foundationEmail" type="email" placeholder="official@foundation.org" required />
-
-          <label for="foundationPassword">Password</label>
-          <input id="foundationPassword" type="password" placeholder="Enter password" required />
-
-          <button type="submit" class="submit-btn">Verify and Continue</button>
-          <p id="verifyStatus" class="verify-status" aria-live="polite"></p>
+          <button type="submit" class="submit-btn">Login as Foundation</button>
+          <p id="foundationLoginStatus" class="verify-status" aria-live="polite"></p>
         </form>
+
+        <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid #d6e3f0;">
+        <p style="text-align: center; font-size: 0.9rem; color: #666; margin-bottom: 1rem;">New foundation?</p>
+
+        <form id="foundationRegisterForm" class="stack-form" style="display:none;">
+          <label for="foundRegName">Foundation Name</label>
+          <input id="foundRegName" type="text" placeholder="Enter foundation name" required />
+
+          <label for="foundRegDarpan">Darpan ID</label>
+          <input id="foundRegDarpan" type="text" placeholder="Example: MH/2021/0123456" required />
+          <small style="color: #666;">Format: ST/2024/1234567</small>
+
+          <label for="foundRegEmail">Official Email</label>
+          <input id="foundRegEmail" type="email" placeholder="official@foundation.org" required />
+
+          <label for="foundRegPassword">Password</label>
+          <input id="foundRegPassword" type="password" placeholder="At least 6 characters" required />
+
+          <button type="submit" class="submit-btn">Register Foundation</button>
+          <p id="foundationRegisterStatus" class="verify-status" aria-live="polite"></p>
+        </form>
+
+        <button type="button" id="toggleFoundationForms" class="back-link" style="margin-top: 1rem;">Create new foundation account</button>
       </section>
     </div>
   </div>
 
+  <script src="firebase-config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
