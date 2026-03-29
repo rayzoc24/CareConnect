@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="trending-issues-styles.css" />
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script>
@@ -34,8 +35,8 @@
       </a>
 
       <nav class="main-nav" aria-label="Primary navigation">
-        <a href="#" class="nav-link">NGO Dashboard</a>
-        <a href="#" class="nav-link">Directory</a>
+        <a href="#workflow" class="nav-link">Workflow</a>
+        <a href="#impact" class="nav-link">Impact</a>
       </nav>
 
       <div class="auth-area">
@@ -62,7 +63,65 @@
       </div>
     </section>
 
-    <section class="impact-stats">
+    <section id="workflow" class="workflow" aria-labelledby="workflowTitle">
+      <div class="workflow-head">
+        <p class="eyebrow">FEATURE OVERVIEW</p>
+        <h2 id="workflowTitle">One organized civic workflow</h2>
+        <p>
+          CareConnect connects issue reporting, AI classification, NGO claiming, and public feedback
+          in one transparent flow: report, sort, claim, resolve, and show impact.
+        </p>
+      </div>
+
+      <div class="workflow-grid">
+        <article class="workflow-card">
+          <h3>1. Entry &amp; Authentication</h3>
+          <ul>
+            <li>Home entry for reporting, browsing, and NGO onboarding</li>
+            <li>Role-based login and signup for volunteers and NGOs</li>
+            <li>Secure profile storage with role-specific access</li>
+          </ul>
+        </article>
+
+        <article class="workflow-card">
+          <h3>2. Issue Submission &amp; AI</h3>
+          <ul>
+            <li>Structured report fields: title, category, location, evidence</li>
+            <li>AI-assisted category and priority suggestions</li>
+            <li>Location tagging using state, district, and area hierarchy</li>
+          </ul>
+        </article>
+
+        <article class="workflow-card">
+          <h3>3. Issue Discovery &amp; Action</h3>
+          <ul>
+            <li>Dashboard filters by location, category, and priority</li>
+            <li>Issue cards for claim, vote, and quick review</li>
+            <li>Detailed view with timeline and evidence before action</li>
+          </ul>
+        </article>
+
+        <article class="workflow-card">
+          <h3>4. NGO Operations &amp; Tracking</h3>
+          <ul>
+            <li>Claim system to avoid duplicate effort</li>
+            <li>Status progression: Pending, Planned, In Progress, Completed</li>
+            <li>NGO task dashboard grouped by live status</li>
+          </ul>
+        </article>
+
+        <article class="workflow-card">
+          <h3>5. Community Feedback &amp; Impact</h3>
+          <ul>
+            <li>Voting to elevate urgent and widely reported issues</li>
+            <li>Post-completion ratings and feedback for accountability</li>
+            <li>Live impact metrics for solved issues and NGO activity</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="impact" class="impact-stats">
       <h2>Our Impact</h2>
       <div class="stats-grid">
         <div class="stat-card">
@@ -130,6 +189,45 @@
             <p class="fact-text">live in areas of high or extremely high water stress.</p>
           </div>
         </article>
+      </div>
+    </section>
+
+    <!-- 🔥 Trending Issues Section -->
+    <section class="trending-section-wrapper" aria-labelledby="trendigTitle">
+      <div id="trending-issues-container"></div>
+    </section>
+
+    <!-- 🏆 Leaderboard Section -->
+    <section class="leaderboard-section-wrapper" aria-labelledby="leaderboardTitle">
+      <div class="leaderboard-container">
+        <div class="leaderboard-header">
+          <span class="leaderboard-icon">🏆</span>
+          <h2 id="leaderboardTitle">Community Leaderboard</h2>
+          <p class="leaderboard-subtitle">See who's making the biggest impact</p>
+        </div>
+
+        <!-- Leaderboard Toggle -->
+        <div class="leaderboard-controls">
+          <div class="toggle-group">
+            <button class="toggle-btn active" data-type="volunteers">
+              👥 Volunteers
+            </button>
+            <button class="toggle-btn" data-type="ngos">
+              🏢 NGOs
+            </button>
+          </div>
+          <div class="range-group">
+            <button class="range-btn active" data-range="weekly">
+              📅 This Week
+            </button>
+            <button class="range-btn" data-range="monthly">
+              📆 This Month
+            </button>
+          </div>
+        </div>
+
+        <!-- Leaderboard Content -->
+        <div id="leaderboard-list" class="leaderboard-list"></div>
       </div>
     </section>
   </main>
@@ -232,7 +330,31 @@
     </div>
   </div>
 
+  <!-- Trending Issues Widget -->
+  <script src="trending-issues.js"></script>
+  
+  <!-- Leaderboard Widget -->
+  <script src="leaderboard-home.js"></script>
+
   <script src="firebase-config.js"></script>
   <script src="script.js"></script>
+
+  <!-- Diagnostic Script -->
+  <script>
+    console.log("Page loaded!");
+    
+    // Check if elements exist
+    const trendingContainer = document.getElementById("trending-issues-container");
+    const leaderboardList = document.getElementById("leaderboard-list");
+    
+    console.log("Trending container element:", trendingContainer ? "✓ Found" : "✗ Not found");
+    console.log("Leaderboard list element:", leaderboardList ? "✓ Found" : "✗ Not found");
+    
+    // Check if widgets are initialized
+    setTimeout(() => {
+      console.log("After 1 second - Trending container HTML:", trendingContainer?.innerHTML?.substring(0, 100) || "Empty/Not found");
+      console.log("After 1 second - Leaderboard list HTML:", leaderboardList?.innerHTML?.substring(0, 100) || "Empty/Not found");
+    }, 1000);
+  </script>
 </body>
 </html>

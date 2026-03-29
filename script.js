@@ -53,7 +53,7 @@ async function handleVolunteerLogin(email, password) {
     showLoading();
 
     try {
-        const volunteer = window.mockAuth.loginVolunteer(email, password);
+        const volunteer = await window.mockAuth.loginVolunteer(email, password);
         console.log('✅ Volunteer signed in:', volunteer.uid);
         
         document.getElementById('headerLoginState').textContent = `Logged in as Volunteer (${volunteer.name})`;
@@ -104,7 +104,7 @@ async function handleVolunteerRegister(name, email, phone, password) {
     showLoading();
 
     try {
-        const volunteer = window.mockAuth.registerVolunteer(name, email, phone, password);
+        const volunteer = await window.mockAuth.registerVolunteer(name, email, phone, password);
         hideLoading();
         showMessage('volunteerRegisterStatus', `Welcome ${name}! Your account has been created. You can now login.`, 'success');
         
@@ -137,7 +137,7 @@ async function handleFoundationLogin(email, password) {
     showLoading();
 
     try {
-        const foundation = window.mockAuth.loginFoundation(email, password);
+        const foundation = await window.mockAuth.loginFoundation(email, password);
         console.log('✅ Foundation signed in:', foundation.uid);
 
         document.getElementById('headerLoginState').textContent = `Logged in as Foundation (${foundation.name})`;
@@ -189,7 +189,7 @@ async function handleFoundationRegister(name, darpanId, email, password) {
     showLoading();
 
     try {
-        const foundation = window.mockAuth.registerFoundation(name, darpanId, email, password);
+        const foundation = await window.mockAuth.registerFoundation(name, darpanId, email, password);
         hideLoading();
         showMessage('foundationRegisterStatus', `Welcome ${name}! Your foundation has been registered. You can now login.`, 'success');
         
@@ -296,12 +296,19 @@ authTrigger.addEventListener("click", (event) => {
 
     if (currentUser) {
         logoutClickGuard = true;
-        sessionStorage.removeItem('currentUser');
-        updateHeaderState();
-        closeModal();
-        setTimeout(() => {
-            logoutClickGuard = false;
-        }, 300);
+        fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        }).catch(() => null).finally(() => {
+            sessionStorage.removeItem('currentUser');
+            updateHeaderState();
+            closeModal();
+            setTimeout(() => {
+                logoutClickGuard = false;
+            }, 300);
+        });
         return;
     } else {
         showModal();
@@ -429,6 +436,9 @@ document.addEventListener("keydown", (event) => {
 
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
+    if (window.location.protocol === "file:") {
+        alert("This app must run from http://localhost:3000 for login to work. Open that URL after starting the server.");
+    }
     console.log('🚀 Page loaded, initializing auth...');
     updateHeaderState();
     console.log('✅ Auth initialized successfully');

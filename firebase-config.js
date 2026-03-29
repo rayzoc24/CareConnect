@@ -1,179 +1,87 @@
-// ===== Local auth with optional Firestore sync =====
-console.log('✅ Auth system initialized (localStorage + optional Firestore sync)');
-
 function normalizeEmail(email) {
-    return String(email || '').trim().toLowerCase();
+  return String(email || "").trim().toLowerCase();
 }
 
-let firestoreDb = null;
-
-function initializeFirebaseBridge() {
-    try {
-        if (typeof window.firebase === 'undefined') {
-            console.warn('ℹ️ Firebase SDK not loaded. Using localStorage only.');
-            return;
-        }
-
-        const cfg = window.CARECONNECT_FIREBASE_CONFIG;
-        if (!cfg || !cfg.apiKey || !cfg.projectId) {
-            console.warn('ℹ️ CARECONNECT_FIREBASE_CONFIG missing. Firestore sync disabled.');
-            return;
-        }
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(cfg);
-        }
-
-        firestoreDb = firebase.firestore();
-        console.log('✅ Firestore sync enabled');
-    } catch (error) {
-        console.error('❌ Firestore init failed:', error.message);
-        firestoreDb = null;
-    }
+function getApiBase() {
+  if (typeof window !== "undefined" && window.location && window.location.protocol === "file:") {
+    return "http://localhost:3000";
+  }
+  return "";
 }
 
-function syncUserToFirestore(collection, user) {
-    if (!firestoreDb || !user || !user.uid) {
-        return;
-    }
-
-    const safeData = {
-        uid: user.uid,
-        name: user.name || '',
-        email: normalizeEmail(user.email),
-        userType: user.userType || '',
-        registeredAt: user.registeredAt || new Date().toISOString()
-    };
-
-    if (user.phone) {
-        safeData.phone = user.phone;
-    }
-    if (user.darpanId) {
-        safeData.darpanId = user.darpanId;
-    }
-    if (user.verificationStatus) {
-        safeData.verificationStatus = user.verificationStatus;
-    }
-
-    firestoreDb.collection(collection).doc(user.uid).set(safeData, { merge: true })
-        .then(() => {
-            console.log(`✅ Synced ${collection}/${user.uid} to Firestore`);
-        })
-        .catch((error) => {
-            console.error(`❌ Failed syncing ${collection}/${user.uid}:`, error.message);
-        });
-}
-
-function logLoginEvent(user) {
-    if (!firestoreDb || !user || !user.uid) {
-        return;
-    }
-
-    firestoreDb.collection('loginEvents').add({
-        uid: user.uid,
-        email: normalizeEmail(user.email),
-        role: user.userType,
-        loggedAt: new Date().toISOString()
-    }).catch((error) => {
-        console.error('❌ Failed writing login event:', error.message);
+async function apiAuth(path, payload) {
+  const url = `${getApiBase()}${path}`;
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
     });
+  } catch (error) {
+    throw new Error("Cannot reach backend. Open the app via http://localhost:3000 and ensure server is running.");
+  }
+
+  const raw = await response.text();
+  let data = {};
+  try {
+    data = raw ? JSON.parse(raw) : {};
+  } catch (error) {
+    data = {};
+  }
+
+  if (!response.ok) {
+    const fallback = raw && raw.trim() ? `Auth request failed (${response.status})` : "Auth request failed.";
+    throw new Error(data.error || fallback);
+  }
+
+  const user = data.user || {};
+  return {
+    uid: user.id,
+    role: user.role,
+    name: user.name,
+    email: normalizeEmail(user.email),
+    darpanId: user.darpanId || ""
+  };
 }
 
 window.mockAuth = {
-    volunteers: [],
-    foundations: [],
+  async registerVolunteer(name, email, phone, password) {
+    return apiAuth("/api/auth/volunteer", {
+      action: "signup",
+      name,
+      email: normalizeEmail(email),
+      phone: String(phone || "").trim(),
+      password
+    });
+  },
 
-    registerVolunteer(name, email, phone, password) {
-        const normalizedEmail = normalizeEmail(email);
-        if (this.volunteers.some(v => normalizeEmail(v.email) === normalizedEmail)) {
-            throw new Error('Email already registered');
-        }
+  async loginVolunteer(email, password) {
+    return apiAuth("/api/auth/volunteer", {
+      action: "login",
+      email: normalizeEmail(email),
+      password
+    });
+  },
 
-        const volunteer = {
-            uid: 'vol_' + Date.now(),
-            name,
-            email: normalizedEmail,
-            phone,
-            password,
-            registeredAt: new Date().toISOString(),
-            userType: 'volunteer'
-        };
+  async registerFoundation(name, darpanId, email, password) {
+    return apiAuth("/api/auth/foundation", {
+      action: "signup",
+      orgName: name,
+      darpanId: String(darpanId || "").trim().toUpperCase(),
+      email: normalizeEmail(email),
+      password
+    });
+  },
 
-        this.volunteers.push(volunteer);
-        localStorage.setItem('volunteers', JSON.stringify(this.volunteers));
-        syncUserToFirestore('volunteers', volunteer);
-        return volunteer;
-    },
-
-    loginVolunteer(email, password) {
-        const normalizedEmail = normalizeEmail(email);
-        const volunteer = this.volunteers.find(v => normalizeEmail(v.email) === normalizedEmail);
-        if (!volunteer) {
-            throw new Error('Volunteer not found');
-        }
-        if (volunteer.password !== password) {
-            throw new Error('Incorrect password');
-        }
-        syncUserToFirestore('volunteers', volunteer);
-        logLoginEvent(volunteer);
-        return volunteer;
-    },
-
-    registerFoundation(name, darpanId, email, password) {
-        const normalizedEmail = normalizeEmail(email);
-        if (this.foundations.some(f => normalizeEmail(f.email) === normalizedEmail)) {
-            throw new Error('Email already registered');
-        }
-
-        const foundation = {
-            uid: 'found_' + Date.now(),
-            name,
-            darpanId: darpanId.toUpperCase(),
-            email: normalizedEmail,
-            password,
-            registeredAt: new Date().toISOString(),
-            userType: 'foundation',
-            verificationStatus: 'pending'
-        };
-
-        this.foundations.push(foundation);
-        localStorage.setItem('foundations', JSON.stringify(this.foundations));
-        syncUserToFirestore('foundations', foundation);
-        return foundation;
-    },
-
-    loginFoundation(email, password) {
-        const normalizedEmail = normalizeEmail(email);
-        const foundation = this.foundations.find(f => normalizeEmail(f.email) === normalizedEmail);
-        if (!foundation) {
-            throw new Error('Foundation not found');
-        }
-        if (foundation.password !== password) {
-            throw new Error('Incorrect password');
-        }
-        syncUserToFirestore('foundations', foundation);
-        logLoginEvent(foundation);
-        return foundation;
-    }
+  async loginFoundation(email, password) {
+    return apiAuth("/api/auth/foundation", {
+      action: "login",
+      email: normalizeEmail(email),
+      password
+    });
+  }
 };
-
-if (localStorage.getItem('volunteers')) {
-    window.mockAuth.volunteers = JSON.parse(localStorage.getItem('volunteers'));
-}
-if (localStorage.getItem('foundations')) {
-    window.mockAuth.foundations = JSON.parse(localStorage.getItem('foundations'));
-}
-
-window.mockAuth.volunteers = window.mockAuth.volunteers.map(v => ({
-    ...v,
-    email: normalizeEmail(v.email)
-}));
-window.mockAuth.foundations = window.mockAuth.foundations.map(f => ({
-    ...f,
-    email: normalizeEmail(f.email)
-}));
-
-localStorage.setItem('volunteers', JSON.stringify(window.mockAuth.volunteers));
-localStorage.setItem('foundations', JSON.stringify(window.mockAuth.foundations));
-
-initializeFirebaseBridge();
