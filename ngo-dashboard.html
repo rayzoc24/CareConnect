@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareConnect - NGO Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="logo">Care<span>Connect</span></h1>
+            <div class="nav-links">
+                <a href="ngo-dashboard.html" class="active">Dashboard</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <span id="user-info" class="hidden"></span>
+                <button id="nav-logout-btn" class="btn btn-outline hidden">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="header-section" style="margin-bottom: 2rem;">
+            <h2>NGO Dashboard</h2>
+            <p>Manage your profile, update your current needs, and view incoming donations.</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Left Column: Profile & Needs -->
+            <div class="dashboard-left">
+                <!-- NGO Profile Section -->
+                <section class="dashboard-card">
+                    <h3 class="section-title" style="text-align: left; margin-bottom: 1rem;">NGO Profile</h3>
+                    <div id="ngo-profile-view">
+                        <p>Loading profile...</p>
+                    </div>
+                </section>
+
+                <!-- Needs Management Section -->
+                <section class="dashboard-card" style="margin-top: 2rem;">
+                    <h3 class="section-title" style="text-align: left; margin-bottom: 1rem;">Update Needs</h3>
+                    <form id="needs-form">
+                        <div class="form-group">
+                            <label>What do you need right now?</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="ngo-needs" value="Food"> Food</label>
+                                <label><input type="checkbox" name="ngo-needs" value="Clothes"> Clothes</label>
+                                <label><input type="checkbox" name="ngo-needs" value="Blood"> Blood</label>
+                                <label><input type="checkbox" name="ngo-needs" value="Money"> Money</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ngo-urgency">Urgency</label>
+                            <select id="ngo-urgency" required>
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="ngo-target-amount-group">
+                            <label for="ngo-target-amount">Target Amount (₹)</label>
+                            <input type="number" id="ngo-target-amount" min="0" placeholder="0">
+                        </div>
+
+                        <div id="needs-success" class="success-msg hidden">Needs updated successfully!</div>
+                        <div id="needs-error" class="error-msg hidden">Failed to update needs.</div>
+
+                        <button type="submit" id="needs-submit-btn" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </section>
+            </div>
+
+            <!-- Right Column: Incoming Donations -->
+            <div class="dashboard-right">
+                <section class="dashboard-card">
+                    <h3 class="section-title" style="text-align: left; margin-bottom: 1rem;">Incoming Donations</h3>
+                    <div id="dashboard-donations-list">
+                        <p>Loading donations...</p>
+                    </div>
+                    <div id="donations-empty" class="empty-state hidden" style="padding: 2rem 1rem;">
+                        <div class="empty-icon" style="font-size: 2rem;">📦</div>
+                        <h4>No donations yet</h4>
+                        <p style="font-size: 0.9rem;">Incoming donations will appear here.</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
