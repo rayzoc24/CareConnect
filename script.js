@@ -26,6 +26,9 @@ try {
 // Global State
 let currentUser = null;
 let currentRole = null; // 'user' or 'ngo'
+let hasInitialPublicDataLoaded = false;
+let ngoFeedRequestToken = 0;
+let urgentNeedsRequestToken = 0;
 
 // DOM Elements
 const authModal = document.getElementById('auth-modal');
@@ -37,6 +40,8 @@ const closeGoodsModal = document.getElementById('close-goods-modal');
 const navLoginBtn = document.getElementById('nav-login-btn');
 const navLogoutBtn = document.getElementById('nav-logout-btn');
 const userInfo = document.getElementById('user-info');
+const themeToggleBtn = document.getElementById('theme-toggle-btn');
+const historyBtn = document.getElementById('my-history-btn');
 const authForm = document.getElementById('auth-form');
 const tabLogin = document.getElementById('tab-login');
 const tabSignup = document.getElementById('tab-signup');
@@ -50,9 +55,13 @@ const regNameInput = document.getElementById('reg-name');
 const foodFeed = document.getElementById('food-feed');
 const clothesFeed = document.getElementById('clothes-feed');
 const moneyFeed = document.getElementById('money-feed');
+const bloodFeed = document.getElementById('blood-feed');
+const educationFeed = document.getElementById('education-feed');
 const foodEmpty = document.getElementById('food-empty');
 const clothesEmpty = document.getElementById('clothes-empty');
 const moneyEmpty = document.getElementById('money-empty');
+const bloodEmpty = document.getElementById('blood-empty');
+const educationEmpty = document.getElementById('education-empty');
 const loadSampleBtn = document.getElementById('load-sample-btn');
 
 // Money Donate DOM
@@ -82,6 +91,14 @@ const donationsEmpty = document.getElementById('donations-empty');
 const needsSuccess = document.getElementById('needs-success');
 const needsError = document.getElementById('needs-error');
 const needsCheckboxes = document.querySelectorAll('input[name="ngo-needs"]');
+const verifyModal = document.getElementById('verify-modal');
+const closeVerifyModal = document.getElementById('close-verify-modal');
+const donorHistoryModal = document.getElementById('donor-history-modal');
+const closeHistoryModal = document.getElementById('close-donor-history-modal');
+const donorHistoryList = document.getElementById('donor-history-list');
+const donorHistoryEmpty = document.getElementById('donor-history-empty');
+const pastDrivesList = document.getElementById('past-drives-list');
+const pastDrivesEmpty = document.getElementById('past-drives-empty');
 
 // Homepage DOM
 const urgentNeedsGrid = document.getElementById('urgent-needs-grid');
@@ -130,6 +147,141 @@ function wireExistingImageFallbacks() {
 
 wireExistingImageFallbacks();
 
+function getStoredTheme() {
+    const storedTheme = localStorage.getItem('theme');
+    return storedTheme === 'dark' ? 'dark' : 'light';
+}
+
+function syncThemeToggle(theme) {
+    if (!themeToggleBtn) return;
+
+    const isDark = theme === 'dark';
+    themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
+    themeToggleBtn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    themeToggleBtn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+}
+
+function applyTheme(theme) {
+    const resolvedTheme = theme === 'dark' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', resolvedTheme);
+    localStorage.setItem('theme', resolvedTheme);
+    syncThemeToggle(resolvedTheme);
+}
+
+applyTheme(getStoredTheme());
+
+themeToggleBtn?.addEventListener('click', () => {
+    const nextTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(nextTheme);
+});
+
+function formatDisplayDate(timestamp) {
+    if (!timestamp) return 'Unknown date';
+    const parsedDate = new Date(timestamp);
+    return Number.isNaN(parsedDate.getTime()) ? 'Unknown date' : parsedDate.toLocaleDateString();
+}
+
+function formatImpactValue(amount, impactCost) {
+    const value = amount / impactCost;
+    return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function openMailClient(email, ngoName) {
+    if (!email) {
+        alert('This NGO has not shared a contact email yet.');
+        return;
+    }
+
+    const subject = encodeURIComponent('Collaboration Request via CareConnect');
+    const body = encodeURIComponent(`Hello ${ngoName || 'there'},\n\nI would like to connect through CareConnect to explore collaboration opportunities.`);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+}
+
+function updateHistoryVisibility(role) {
+    if (!historyBtn) return;
+    historyBtn.classList.toggle('hidden', role !== 'user');
+}
+
+function loadPublicDataOnce(force = false) {
+    if (force || !hasInitialPublicDataLoaded) {
+        hasInitialPublicDataLoaded = true;
+        fetchVerifiedNGOs();
+        fetchUrgentNeeds();
+    }
+}
+
+async function fetchNgoNameById(ngoId) {
+    if (!ngoId || !db) return '';
+
+    try {
+        const ngoSnap = await getDoc(doc(db, 'ngos', ngoId));
+        if (ngoSnap.exists()) {
+            return ngoSnap.data().name || '';
+        }
+    } catch (error) {
+        console.error('Failed to resolve NGO name', error);
+    }
+
+    return '';
+}
+
+async function renderDonorHistory() {
+    if (!donorHistoryList || !currentUser || !db) return;
+
+    donorHistoryList.innerHTML = '<p>Loading donation history...</p>';
+    donorHistoryEmpty?.classList.add('hidden');
+
+    try {
+        const historyQuery = query(collection(db, 'donations'), where('userId', '==', currentUser.uid));
+        const historySnapshot = await getDocs(historyQuery);
+        const donations = historySnapshot.docs.map((historyDoc) => ({ id: historyDoc.id, ...historyDoc.data() }));
+
+        donations.sort((left, right) => new Date(right.timestamp || 0) - new Date(left.timestamp || 0));
+
+        if (donations.length === 0) {
+            donorHistoryList.innerHTML = '';
+            donorHistoryEmpty?.classList.remove('hidden');
+            return;
+        }
+
+        donorHistoryList.innerHTML = '';
+        const ngoNameCache = new Map();
+
+        for (const donation of donations) {
+            let ngoName = ngoNameCache.get(donation.ngoId);
+            if (!ngoName) {
+                ngoName = await fetchNgoNameById(donation.ngoId);
+                ngoNameCache.set(donation.ngoId, ngoName);
+            }
+
+            const historyItem = document.createElement('div');
+            historyItem.className = 'donation-item';
+            const donationAmount = donation.type === 'Money' ? `₹${Number(donation.amount || 0).toLocaleString()}` : 'Item donation';
+
+            historyItem.innerHTML = `
+                <div class="donation-item-header">
+                    <span class="donation-type-badge">${donation.type || 'Donation'}</span>
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">${formatDisplayDate(donation.timestamp)}</span>
+                </div>
+                <div style="margin-bottom: 0.35rem;"><strong>Amount:</strong> ${donationAmount}</div>
+                <div style="margin-bottom: 0.35rem;"><strong>NGO:</strong> ${ngoName || 'Unknown NGO'}</div>
+                <div><strong>Date:</strong> ${formatDisplayDate(donation.timestamp)}</div>
+            `;
+
+            donorHistoryList.appendChild(historyItem);
+        }
+    } catch (error) {
+        console.error('Failed to load donor history', error);
+        donorHistoryList.innerHTML = '<p>Failed to load donation history.</p>';
+    }
+}
+
+function openDonorHistoryModal() {
+    if (!donorHistoryModal) return;
+    donorHistoryModal.classList.remove('hidden');
+    renderDonorHistory();
+}
+
 function setJoinNgoVisibility(isVisible) {
     if (!joinNgoBtn) return;
     joinNgoBtn.classList.toggle('hidden', !isVisible);
@@ -158,6 +310,23 @@ closeGoodsModal?.addEventListener('click', () => {
     goodsDonateModal?.classList.add('hidden');
     goodsSuccess?.classList.add('hidden');
     goodsError?.classList.add('hidden');
+});
+
+closeVerifyModal?.addEventListener('click', () => {
+    verifyModal?.classList.add('hidden');
+});
+
+historyBtn?.addEventListener('click', () => {
+    if (!currentUser) {
+        authModal?.classList.remove('hidden');
+        return;
+    }
+
+    openDonorHistoryModal();
+});
+
+closeHistoryModal?.addEventListener('click', () => {
+    donorHistoryModal?.classList.add('hidden');
 });
 
 joinNgoBtn?.addEventListener('click', () => {
@@ -244,13 +413,15 @@ authForm?.addEventListener('submit', async (e) => {
                     name: name,
                     email: email,
                     category: "General",
-                    description: "A new NGO on the platform.",
-                    needs: ["Money"],
-                    urgency: "Medium",
-                    targetAmount: 10000,
+                    description: "",
+                    needs: [],
+                    urgency: "",
+                    targetAmount: 0,
                     collectedAmount: 0,
                     location: "Unknown",
-                    impactPerRupee: "1 rupee helps",
+                    impactPerRupee: "",
+                    impactCost: 0,
+                    impactUnit: "",
                     verified: false // NGOs start unverified
                 });
             }
@@ -306,30 +477,48 @@ function updateNavbarForRole(role) {
     let dashboardLink = navLinksContainer.querySelector('a[href="ngo-dashboard.html"]');
     
     if (role === 'ngo') {
-        if (homeLink) homeLink.classList.add('hidden');
-        if (donateLink) donateLink.classList.add('hidden');
+        if (homeLink) homeLink.classList.remove('hidden');
+        if (donateLink) donateLink.classList.remove('hidden');
         
         if (!dashboardLink) {
             dashboardLink = document.createElement('a');
             dashboardLink.href = 'ngo-dashboard.html';
             dashboardLink.textContent = 'Dashboard';
-            const firstLink = navLinksContainer.querySelector('a');
-            if (firstLink) {
-                navLinksContainer.insertBefore(dashboardLink, firstLink);
+            if (donateLink && donateLink.nextSibling) {
+                navLinksContainer.insertBefore(dashboardLink, donateLink.nextSibling);
+            } else {
+                navLinksContainer.appendChild(dashboardLink);
             }
         } else {
             dashboardLink.classList.remove('hidden');
         }
+        updateHistoryVisibility(role);
     } else {
         if (homeLink) homeLink.classList.remove('hidden');
         if (donateLink) donateLink.classList.remove('hidden');
         if (dashboardLink && !window.location.pathname.includes('ngo-dashboard.html')) {
             dashboardLink.classList.add('hidden');
         }
+        updateHistoryVisibility(role);
     }
 }
 
 // Auth State Observer
+// Pre-load from localStorage to prevent navbar flicker
+const storedUser = localStorage.getItem('careConnectUser');
+if (storedUser) {
+    try {
+        const { name, email, role } = JSON.parse(storedUser);
+        if (userInfo) {
+            userInfo.classList.remove('hidden');
+            userInfo.textContent = name ? `Hello, ${name} (${role})` : `Hello, ${email}`;
+        }
+        navLoginBtn?.classList.add('hidden');
+        navLogoutBtn?.classList.remove('hidden');
+        updateNavbarForRole(role);
+    } catch(e) {}
+}
+
 if (auth) {
     onAuthStateChanged(auth, async (user) => {
         currentUser = user;
@@ -344,13 +533,17 @@ if (auth) {
                 const docSnap = await getDoc(doc(db, "users", user.uid));
                 if (docSnap.exists() && userInfo) {
                     currentRole = docSnap.data().role;
-                    userInfo.textContent = `Hello, ${docSnap.data().name} (${currentRole})`;
+                    const userName = docSnap.data().name;
+                    userInfo.textContent = `Hello, ${userName} (${currentRole})`;
+                    localStorage.setItem('careConnectUser', JSON.stringify({ name: userName, email: user.email, role: currentRole }));
                 } else if(userInfo) {
                     currentRole = 'user';
                     userInfo.textContent = `Hello, ${user.email}`;
+                    localStorage.setItem('careConnectUser', JSON.stringify({ name: '', email: user.email, role: currentRole }));
                 }
 
                 updateNavbarForRole(currentRole);
+                loadPublicDataOnce();
 
                 // Route Protection
                 const currentPath = window.location.pathname;
@@ -358,10 +551,7 @@ if (auth) {
                 const isIndex = currentPath.includes('index.html') || currentPath.endsWith('/') || currentPath.endsWith('CareConnect\\') || currentPath.endsWith('CareConnect');
                 const isDonate = currentPath.includes('donate.html');
 
-                if (currentRole === 'ngo' && (isIndex || isDonate)) {
-                    window.location.href = 'ngo-dashboard.html';
-                    return;
-                } else if (currentRole === 'user' && isDashboard) {
+                if (currentRole === 'user' && isDashboard) {
                     window.location.href = 'index.html';
                     return;
                 }
@@ -374,6 +564,7 @@ if (auth) {
                 console.error("Error fetching user data", e);
             }
         } else {
+            localStorage.removeItem('careConnectUser');
             setJoinNgoVisibility(true);
             navLoginBtn?.classList.remove('hidden');
             navLogoutBtn?.classList.add('hidden');
@@ -381,6 +572,7 @@ if (auth) {
             if(userInfo) userInfo.textContent = '';
             currentRole = null;
             updateNavbarForRole(null);
+            loadPublicDataOnce();
 
             const currentPath = window.location.pathname;
             if (currentPath.includes('ngo-dashboard.html')) {
@@ -392,7 +584,8 @@ if (auth) {
 
 // Fetch NGOs (Only runs if we have donation feeds present)
 async function fetchVerifiedNGOs() {
-    if (!foodFeed && !clothesFeed && !moneyFeed) return;
+    if (!foodFeed && !clothesFeed && !moneyFeed && !bloodFeed && !educationFeed) return;
+    const requestToken = ++ngoFeedRequestToken;
     
     if (!db) {
         if(foodFeed) foodFeed.innerHTML = "<p style='text-align:center;color:red'>Firebase not configured. Please add config.</p>";
@@ -402,16 +595,27 @@ async function fetchVerifiedNGOs() {
     if(foodFeed) foodFeed.innerHTML = "<p>Loading...</p>";
     if(clothesFeed) clothesFeed.innerHTML = "<p>Loading...</p>";
     if(moneyFeed) moneyFeed.innerHTML = "<p>Loading...</p>";
+    if(bloodFeed) bloodFeed.innerHTML = "<p>Loading...</p>";
+    if(educationFeed) educationFeed.innerHTML = "<p>Loading...</p>";
+
+    foodEmpty?.classList.add('hidden');
+    clothesEmpty?.classList.add('hidden');
+    moneyEmpty?.classList.add('hidden');
+    bloodEmpty?.classList.add('hidden');
+    educationEmpty?.classList.add('hidden');
 
     try {
         const q = query(collection(db, "ngos"), where("verified", "==", true));
         const querySnapshot = await getDocs(q);
+        if (requestToken !== ngoFeedRequestToken) return;
 
         if(foodFeed) foodFeed.innerHTML = "";
         if(clothesFeed) clothesFeed.innerHTML = "";
         if(moneyFeed) moneyFeed.innerHTML = "";
+        if(bloodFeed) bloodFeed.innerHTML = "";
+        if(educationFeed) educationFeed.innerHTML = "";
 
-        let foodCount = 0, clothesCount = 0, moneyCount = 0;
+        let foodCount = 0, clothesCount = 0, moneyCount = 0, bloodCount = 0, educationCount = 0;
 
         querySnapshot.forEach((doc) => {
             const data = doc.data();
@@ -429,11 +633,21 @@ async function fetchVerifiedNGOs() {
                 renderNgoCard(doc.id, data, "Money", moneyFeed);
                 moneyCount++;
             }
+            if (needs.includes("Blood") && bloodFeed) {
+                renderNgoCard(doc.id, data, "Blood", bloodFeed);
+                bloodCount++;
+            }
+            if (needs.includes("Education") && educationFeed) {
+                renderNgoCard(doc.id, data, "Education", educationFeed);
+                educationCount++;
+            }
         });
 
         if (foodCount === 0 && foodEmpty) foodEmpty.classList.remove('hidden');
         if (clothesCount === 0 && clothesEmpty) clothesEmpty.classList.remove('hidden');
         if (moneyCount === 0 && moneyEmpty) moneyEmpty.classList.remove('hidden');
+        if (bloodCount === 0 && bloodEmpty) bloodEmpty.classList.remove('hidden');
+        if (educationCount === 0 && educationEmpty) educationEmpty.classList.remove('hidden');
 
     } catch (error) {
         console.error("Error fetching NGOs:", error);
@@ -446,39 +660,64 @@ function renderNgoCard(id, data, type, container) {
 
     // Calculate progress for money
     let progressPercentage = 0;
-    if (data.targetAmount > 0) {
+    let showProgress = false;
+    if (data.targetAmount && data.targetAmount > 0) {
+        showProgress = true;
         progressPercentage = Math.min(100, Math.round((data.collectedAmount / data.targetAmount) * 100));
     }
 
     const needsHtml = data.needs ? data.needs.map(need => `<span>${need}</span>`).join('') : '';
     const locationText = data.location ? `<p class="ngo-location">${data.location}</p>` : '';
+    
+    // Always show contact info
+    const contactEmail = data.email || 'Not provided';
+    const contactPhone = data.phone || 'Not provided';
+    const campTimeHtml = (type === 'Blood' || data.category === 'Blood') ? 
+        `<div style="margin-bottom: 0.15rem;">🕒 <strong>Time:</strong> ${data.campTime || 'Contact for available times'}</div>` : '';
+
+    const contactInfoHtml = `
+        <div style="margin: 0.75rem 0; font-size: 0.85rem; padding: 0.75rem; background: var(--surface-muted); border-radius: var(--radius-sm); border: 1px solid var(--border-strong);">
+            <div style="color: var(--primary-strong); font-weight: bold; margin-bottom: 0.25rem;">Contact Details:</div>
+            ${campTimeHtml}
+            <div style="margin-bottom: 0.15rem;">📧 <strong>Email:</strong> ${contactEmail}</div>
+            <div>📞 <strong>Phone:</strong> ${contactPhone}</div>
+        </div>
+    `;
+
+    const progressHtml = showProgress ? `
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${progressPercentage}%"></div>
+            </div>
+            <div class="progress-stats">
+                <span>₹${data.collectedAmount || 0} raised</span>
+                <span>Goal: ₹${data.targetAmount || 0}</span>
+            </div>
+        </div>
+    ` : '';
 
     card.innerHTML = `
         <div class="ngo-content">
             <div class="ngo-header">
                 <h3 class="ngo-name">${data.name}</h3>
-                <span class="ngo-badge badge-verified">✓ Verified</span>
+                <div style="display:flex; gap:0.5rem;">
+                    <span class="ngo-badge badge-urgency badge-${(data.urgency || 'Low').toLowerCase()}">${data.urgency || 'Low'}</span>
+                    <span class="ngo-badge badge-verified">✓ Verified</span>
+                </div>
             </div>
             <span class="ngo-category">${data.category}</span>
             ${locationText}
             <p class="ngo-desc">${data.description}</p>
+            ${contactInfoHtml}
             
             <div class="ngo-needs">
                 <strong>Needs:</strong>
                 <div>${needsHtml}</div>
             </div>
 
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${progressPercentage}%"></div>
-                </div>
-                <div class="progress-stats">
-                    <span>₹${data.collectedAmount || 0} raised</span>
-                    <span>Goal: ₹${data.targetAmount || 0}</span>
-                </div>
-            </div>
+            ${progressHtml}
             
-            <button class="btn btn-outline full-width donate-btn" data-id="${id}" data-name="${data.name}">Donate ${type}</button>
+                <button class="btn btn-outline full-width donate-btn" data-id="${id}" data-name="${data.name}">${currentRole === 'ngo' ? 'Connect' : `Donate ${type}`}</button>
         </div>
     `;
 
@@ -486,13 +725,18 @@ function renderNgoCard(id, data, type, container) {
 
     // Add event listener to the newly created button
     card.querySelector('.donate-btn').addEventListener('click', (e) => {
+        if (currentRole === 'ngo') {
+            openMailClient(data.email || 'support@careconnect.org', data.name);
+            return;
+        }
+
         if (!currentUser) {
             alert("Please log in to donate.");
             authModal?.classList.remove('hidden');
             return;
         }
 
-        if (type === 'Food' || type === 'Clothes') {
+        if (type === 'Food' || type === 'Clothes' || type === 'Education' || type === 'Blood') {
             openGoodsModal(id, data.name, type);
         } else {
             openDonateModal(id, data.name);
@@ -505,6 +749,7 @@ function openDonateModal(ngoId, ngoName) {
     if(!donateModal) return;
     donateNgoId.value = ngoId;
     donateNgoName.textContent = `Donate to ${ngoName}`;
+    donateNgoName.dataset.ngoName = ngoName;
     donateType.value = 'Money';
     amountGroup?.classList.remove('hidden');
     donateAmount.required = true;
@@ -526,21 +771,39 @@ donateForm?.addEventListener('submit', async (e) => {
     const type = donateType.value || 'Money';
     const amount = Number(donateAmount.value);
     const ngoId = donateNgoId.value;
+    const ngoName = donateNgoName.dataset.ngoName || donateNgoName.textContent.replace(/^Donate to\s*/i, '') || 'this NGO';
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+        donateError.textContent = 'Please enter a valid donation amount.';
+        donateError.classList.remove('hidden');
+        submitBtn.disabled = false;
+        return;
+    }
 
     try {
+        const ngoRef = doc(db, "ngos", ngoId);
+        const ngoSnap = await getDoc(ngoRef);
+        const ngoData = ngoSnap.exists() ? ngoSnap.data() : {};
+        const impactCost = Number(ngoData.impactCost);
+        const impactUnit = String(ngoData.impactUnit || '').trim();
+        const hasImpactData = Number.isFinite(impactCost) && impactCost > 0 && impactUnit;
+        const impactEstimate = hasImpactData ? formatImpactValue(amount, impactCost) : '';
+
         // 1. Create donation document
         await addDoc(collection(db, "donations"), {
             ngoId: ngoId,
+            ngoName: ngoName,
             userId: currentUser.uid,
             type: type,
-            amount: amount, 
+            amount: amount,
+            impactCost: hasImpactData ? impactCost : null,
+            impactUnit: hasImpactData ? impactUnit : '',
+            impactEstimate: hasImpactData ? impactEstimate : '',
             timestamp: new Date().toISOString()
         });
 
         // 2. If it's a money donation, update the NGO's collectedAmount
         if (amount > 0) {
-            const ngoRef = doc(db, "ngos", ngoId);
-            const ngoSnap = await getDoc(ngoRef);
             if (ngoSnap.exists()) {
                 const currentAmount = ngoSnap.data().collectedAmount || 0;
                 await updateDoc(ngoRef, {
@@ -549,7 +812,8 @@ donateForm?.addEventListener('submit', async (e) => {
             }
         }
 
-        donateSuccess.textContent = "Thank you for your donation!";
+        const impactMessage = hasImpactData ? ` Your ₹${amount.toLocaleString()} donation will provide ${impactEstimate} ${impactUnit}!` : '';
+        donateSuccess.textContent = `Thank you for your donation!${impactMessage}`;
         donateSuccess.classList.remove('hidden');
         donateForm.reset();
 
@@ -574,6 +838,26 @@ function openGoodsModal(ngoId, ngoName, type) {
     goodsNgoId.value = ngoId;
     goodsNgoName.textContent = `Donate ${type} to ${ngoName}`;
     goodsDonateType.value = type;
+    
+    const goodsDescGroup = document.getElementById('goods-desc-group');
+    const goodsDescInput = document.getElementById('goods-desc');
+    const goodsAddressGroup = document.getElementById('goods-address-group');
+    const goodsAddressInput = document.getElementById('goods-address');
+
+    if (goodsDescGroup && goodsDescInput && goodsAddressGroup && goodsAddressInput) {
+        if (type === 'Blood') {
+            goodsDescGroup.classList.add('hidden');
+            goodsDescInput.required = false;
+            goodsAddressGroup.classList.add('hidden');
+            goodsAddressInput.required = false;
+        } else {
+            goodsDescGroup.classList.remove('hidden');
+            goodsDescInput.required = true;
+            goodsAddressGroup.classList.remove('hidden');
+            goodsAddressInput.required = true;
+        }
+    }
+
     goodsDonateForm.reset();
     goodsError.classList.add('hidden');
     goodsSuccess.classList.add('hidden');
@@ -607,8 +891,6 @@ goodsDonateForm?.addEventListener('submit', async (e) => {
             description: desc,
             timestamp: new Date().toISOString()
         });
-
-        goodsSuccess.textContent = "Thank you! You will be mailed the timings for collection soon.";
         goodsSuccess.classList.remove('hidden');
         goodsDonateForm.reset();
         
@@ -643,7 +925,10 @@ loadSampleBtn?.addEventListener('click', async () => {
             collectedAmount: 12500,
             location: "Mumbai",
             impactPerRupee: "₹50 = 1 Meal",
-            verified: true
+            impactCost: 50,
+            impactUnit: "Meals",
+            verified: true,
+            email: "hello@foodforall.org"
         },
         {
             name: "Warm Hearts Winter Drive",
@@ -655,7 +940,10 @@ loadSampleBtn?.addEventListener('click', async () => {
             collectedAmount: 18000,
             location: "Delhi",
             impactPerRupee: "₹200 = 1 Blanket",
-            verified: true
+            impactCost: 200,
+            impactUnit: "Blankets",
+            verified: true,
+            email: "connect@warmhearts.org"
         },
         {
             name: "LifeBlood Initiative",
@@ -667,19 +955,23 @@ loadSampleBtn?.addEventListener('click', async () => {
             collectedAmount: 0,
             location: "Bangalore",
             impactPerRupee: "N/A",
-            verified: true
+            verified: true,
+            email: "care@lifeblood.org"
         },
         {
             name: "Future Scholars Org",
             category: "Education",
             description: "Providing school supplies and scholarships to promising students from low-income families.",
-            needs: ["Money", "Clothes"],
+            needs: ["Money", "Education"],
             urgency: "Medium",
             targetAmount: 100000,
             collectedAmount: 45000,
             location: "Chennai",
             impactPerRupee: "₹500 = Books for a month",
-            verified: true
+            impactCost: 500,
+            impactUnit: "Months of books",
+            verified: true,
+            email: "partnerships@futurescholars.org"
         },
         {
             name: "Unverified Sketchy NGO",
@@ -691,7 +983,8 @@ loadSampleBtn?.addEventListener('click', async () => {
             collectedAmount: 0,
             location: "Unknown",
             impactPerRupee: "Unknown",
-            verified: false // THIS SHOULD NOT APPEAR IN THE FEED
+            verified: false, // THIS SHOULD NOT APPEAR IN THE FEED
+            email: "unknown@example.com"
         }
     ];
 
@@ -736,10 +1029,14 @@ async function initNGODashboard() {
             let verificationWarning = '';
             if (!data.verified) {
                 verificationWarning = `
-                    <div style="background: #FFF3CD; color: #856404; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #FFEEBA; font-size: 0.9rem;">
-                        <strong>Action Required: Complete Verification</strong><br>
-                        Your NGO profile is currently unverified. You will not appear in the donation feeds until verified.<br><br>
-                        Please email your registration certificates and proof of work to <strong>support@careconnect.org</strong>. We will review your documents and verify your account within 48 hours.
+                    <div style="background: #fff8eb; color: #b7791f; padding: 1.25rem; border-radius: 8px; margin-top: 1.5rem; border: 1px solid #fbd38d;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap: 1rem; flex-wrap: wrap;">
+                            <div>
+                                <strong style="font-size: 1.05rem; display:block; margin-bottom:0.25rem;">⚠️ Profile Under Review</strong>
+                                <span style="font-size: 0.9rem;">Your NGO is unverified and hidden from donation feeds.</span>
+                            </div>
+                            <button id="btn-get-verified" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size:0.9rem;">Get Verified</button>
+                        </div>
                     </div>
                 `;
             }
@@ -771,10 +1068,18 @@ async function initNGODashboard() {
                 <div style="margin-bottom: 0.5rem;"><strong>Category:</strong> ${data.category}</div>
                 <div style="margin-bottom: 0.5rem;"><strong>Status:</strong> ${data.verified ? '<span style="color:var(--success);">✓ Verified</span>' : '<span style="color:var(--error);">Pending Verification</span>'}</div>
                 <div style="margin-bottom: 0.5rem;"><strong>Current Needs:</strong> ${data.needs && data.needs.length ? data.needs.join(', ') : 'None'}</div>
+                ${data.needs && data.needs.length && data.urgency ? `<div style="margin-bottom: 0.5rem;"><strong>Assigned Urgency:</strong> <span class="ngo-badge badge-urgency badge-${data.urgency.toLowerCase()}" style="display:inline-block; margin-left: 0.5rem;">${data.urgency}</span></div>` : ''}
                 ${financialStats}
                 ${stopDonationBtn}
                 ${verificationWarning}
             `;
+
+            const getVerifiedBtn = document.getElementById('btn-get-verified');
+            if (getVerifiedBtn && verifyModal) {
+                getVerifiedBtn.addEventListener('click', () => {
+                    verifyModal.classList.remove('hidden');
+                });
+            }
 
             const stopBtn = document.getElementById('stop-donation-btn');
             if (stopBtn) {
@@ -782,9 +1087,23 @@ async function initNGODashboard() {
                     if (confirm("Are you sure you want to stop the current donation drive? This will clear your current needs.")) {
                         stopBtn.disabled = true;
                         try {
+                            await addDoc(collection(db, 'pastDrives'), {
+                                ngoId: currentUser.uid,
+                                ngoName: data.name || '',
+                                needs: data.needs || [],
+                                collectedAmount: data.collectedAmount || 0,
+                                targetAmount: data.targetAmount || 0,
+                                urgency: data.urgency || '',
+                                description: data.description || '',
+                                timestamp: new Date().toISOString()
+                            });
+
                             await updateDoc(doc(db, "ngos", currentUser.uid), {
                                 needs: [],
-                                targetAmount: 0
+                                targetAmount: 0,
+                                collectedAmount: 0,
+                                impactCost: 0,
+                                impactUnit: ""
                             });
                             alert("Donation drive stopped. Your needs have been cleared.");
                             initNGODashboard();
@@ -803,8 +1122,10 @@ async function initNGODashboard() {
                 needsCheckboxes.forEach(cb => {
                     cb.checked = needs.includes(cb.value);
                 });
-                const urgencyInput = document.getElementById('ngo-urgency');
-                if (urgencyInput) urgencyInput.value = data.urgency || 'Low';
+                const descInput = document.getElementById('ngo-description');
+                if (descInput) {
+                    descInput.value = data.description === 'A new NGO on the platform.' ? '' : (data.description || '');
+                }
                 
                 const targetAmtInput = document.getElementById('ngo-target-amount');
                 if (needs.includes('Money')) {
@@ -863,6 +1184,35 @@ async function initNGODashboard() {
             }
         }
 
+        if (pastDrivesList) {
+            const pastQuery = query(collection(db, 'pastDrives'), where('ngoId', '==', currentUser.uid));
+            const pastSnapshot = await getDocs(pastQuery);
+            const pastDrives = pastSnapshot.docs.map((pastDoc) => ({ id: pastDoc.id, ...pastDoc.data() }));
+            pastDrives.sort((left, right) => new Date(right.timestamp || 0) - new Date(left.timestamp || 0));
+
+            pastDrivesList.innerHTML = '';
+            if (pastDrives.length === 0) {
+                pastDrivesEmpty?.classList.remove('hidden');
+            } else {
+                pastDrivesEmpty?.classList.add('hidden');
+                pastDrives.forEach((drive) => {
+                    const driveItem = document.createElement('div');
+                    driveItem.className = 'donation-item past-drive-item';
+                    driveItem.innerHTML = `
+                        <div class="donation-item-header">
+                            <span class="donation-type-badge">Past Drive</span>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">${formatDisplayDate(drive.timestamp)}</span>
+                        </div>
+                        <div style="margin-bottom: 0.35rem;"><strong>Needs:</strong> ${(drive.needs || []).join(', ') || 'None'}</div>
+                        <div style="margin-bottom: 0.35rem;"><strong>Collected:</strong> ₹${Number(drive.collectedAmount || 0).toLocaleString()}</div>
+                        <div style="margin-bottom: 0.35rem;"><strong>Target:</strong> ₹${Number(drive.targetAmount || 0).toLocaleString()}</div>
+                        <div><strong>Summary:</strong> ${drive.description || 'No description provided.'}</div>
+                    `;
+                    pastDrivesList.appendChild(driveItem);
+                });
+            }
+        }
+
     } catch (e) {
         console.error("Dashboard init error", e);
     }
@@ -878,10 +1228,32 @@ needsForm?.addEventListener('submit', async (e) => {
     const submitBtn = document.getElementById('needs-submit-btn');
     if(submitBtn) submitBtn.disabled = true;
 
+    const originalBtnText = submitBtn ? submitBtn.textContent : '';
+    if(submitBtn) submitBtn.textContent = 'Analyzing Urgency...';
+
     const selectedNeeds = Array.from(needsCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
-    const urgency = document.getElementById('ngo-urgency').value;
-    let targetAmount = 0;
     
+    const descriptionEl = document.getElementById('ngo-description');
+    const description = descriptionEl ? descriptionEl.value : '';
+
+    let urgency = 'Medium';
+    if (description) {
+        try {
+            const response = await fetch('http://localhost:3000/api/classify-urgency', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                urgency = data.urgency || 'Medium';
+            }
+        } catch (err) {
+            console.error("AI classification failed, falling back to Medium:", err);
+        }
+    }
+
+    let targetAmount = 0;
     if (selectedNeeds.includes('Money')) {
         targetAmount = Number(document.getElementById('ngo-target-amount').value);
     }
@@ -890,6 +1262,7 @@ needsForm?.addEventListener('submit', async (e) => {
         await updateDoc(doc(db, "ngos", currentUser.uid), {
             needs: selectedNeeds,
             urgency: urgency,
+            description: description,
             targetAmount: targetAmount
         });
         
@@ -904,13 +1277,17 @@ needsForm?.addEventListener('submit', async (e) => {
         console.error("Error updating needs", error);
         if(needsError) needsError.classList.remove('hidden');
     } finally {
-        if(submitBtn) submitBtn.disabled = false;
+        if(submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText || 'Save Changes';
+        }
     }
 });
 
 // Fetch Urgent Needs for Homepage
 async function fetchUrgentNeeds() {
     if (!urgentNeedsGrid) return;
+    const requestToken = ++urgentNeedsRequestToken;
     
     if (!db) {
         urgentNeedsGrid.innerHTML = "<p>Firebase not configured.</p>";
@@ -920,6 +1297,7 @@ async function fetchUrgentNeeds() {
     try {
         const q = query(collection(db, "ngos"), where("verified", "==", true));
         const querySnapshot = await getDocs(q);
+        if (requestToken !== urgentNeedsRequestToken) return;
         
         const needMeta = {
             Food: {
@@ -1004,11 +1382,16 @@ async function fetchUrgentNeeds() {
                     <h3 class="urgent-title">${need.title}</h3>
                     <div class="urgent-loc">📍 ${need.location || 'Local area'}</div>
                     <p class="urgent-desc">${need.description.substring(0,60)}...</p>
-                    <a href="donate.html#${need.specificNeed.toLowerCase()}" class="btn btn-primary full-width urgent-action">Support Now</a>
+                    ${currentRole === 'ngo' ? '<button type="button" class="btn btn-soft full-width urgent-action connect-ngo-btn">Connect</button>' : `<a href="donate.html#${need.specificNeed.toLowerCase()}" class="btn btn-primary full-width urgent-action">Support Now</a>`}
                 </div>
             `;
             const cardImage = card.querySelector('img');
             applyImageFallback(cardImage, need.title || need.specificNeed);
+            if (currentRole === 'ngo') {
+                card.querySelector('.connect-ngo-btn')?.addEventListener('click', () => {
+                    openMailClient(need.email || 'support@careconnect.org', need.name);
+                });
+            }
             urgentNeedsGrid.appendChild(card);
         });
 
@@ -1042,8 +1425,7 @@ function setupHomeCategoryFilters() {
 
 // Initial Load
 if (db) {
-    fetchVerifiedNGOs();
-    fetchUrgentNeeds();
+    loadPublicDataOnce();
 }
 
 setupHomeCategoryFilters();

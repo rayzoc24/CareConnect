@@ -12,10 +12,15 @@
         <div class="nav-container">
             <h1 class="logo">Care<span>Connect</span></h1>
             <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="donate.html">Donate</a>
                 <a href="ngo-dashboard.html" class="active">Dashboard</a>
                 <a href="about.html">About</a>
                 <a href="contact.html">Contact</a>
                 <span id="user-info" class="hidden"></span>
+                <button id="my-history-btn" class="btn btn-outline hidden">My History</button>
+                <button id="theme-toggle-btn" class="btn btn-outline nav-icon-btn" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">🌙</button>
+                <button id="nav-login-btn" class="btn btn-outline">Sign In / Sign Up</button>
                 <button id="nav-logout-btn" class="btn btn-outline hidden">Logout</button>
             </div>
         </div>
@@ -49,17 +54,20 @@
                                 <label><input type="checkbox" name="ngo-needs" value="Clothes"> Clothes</label>
                                 <label><input type="checkbox" name="ngo-needs" value="Blood"> Blood</label>
                                 <label><input type="checkbox" name="ngo-needs" value="Money"> Money</label>
+                                <label><input type="checkbox" name="ngo-needs" value="Education"> Education</label>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label for="ngo-urgency">Urgency</label>
-                            <select id="ngo-urgency" required>
-                                <option value="Low">Low</option>
-                                <option value="Medium">Medium</option>
-                                <option value="High">High</option>
-                                <option value="Critical">Critical</option>
-                            </select>
+                            <label for="ngo-description">Request Description</label>
+                            <textarea id="ngo-description" rows="3" placeholder="Describe your current needs (e.g., 'We urgently need blankets for 50 people'). This helps our AI classify urgency." required style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; font-family: inherit; font-size: 0.95rem; resize: vertical;"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Urgency Classification</label>
+                            <div style="background: var(--surface-muted); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 0.9rem; color: var(--text-muted);">
+                                🤖 AI will automatically classify urgency based on your description.
+                            </div>
                         </div>
 
                         <div class="form-group" id="ngo-target-amount-group">
@@ -88,9 +96,51 @@
                         <p style="font-size: 0.9rem;">Incoming donations will appear here.</p>
                     </div>
                 </section>
+
+                <section class="dashboard-card" style="margin-top: 2rem;">
+                    <h3 class="section-title" style="text-align: left; margin-bottom: 1rem;">Past Donation Drives</h3>
+                    <div id="past-drives-list"></div>
+                    <div id="past-drives-empty" class="empty-state hidden" style="padding: 2rem 1rem;">
+                        <div class="empty-icon" style="font-size: 2rem;">🕒</div>
+                        <h4>No past drives yet</h4>
+                        <p style="font-size: 0.9rem;">Ended drives will appear here for quick review.</p>
+                    </div>
+                </section>
             </div>
         </div>
     </main>
+
+    <!-- Verification Instructions Modal -->
+    <div id="verify-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" id="close-verify-modal">&times;</span>
+            <h3>Get Verified</h3>
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">Follow these steps to verify your NGO and start receiving donations.</p>
+            
+            <div style="background: var(--surface-muted); padding: 1.5rem; border-radius: var(--radius-md); text-align: left;">
+                <ol style="padding-left: 1.2rem; line-height: 1.8;">
+                    <li><strong>Prepare your documents:</strong> Gather your NGO Registration Certificate (80G/12A), PAN Card, and a recent proof of work/activity report.</li>
+                    <li><strong>Email us:</strong> Send these documents to <strong>support@careconnect.org</strong> from your registered email address.</li>
+                    <li><strong>Review Process:</strong> Our team will verify your details within 48-72 hours.</li>
+                    <li><strong>Go Live:</strong> Once approved, your profile status will update automatically and you will appear in the donation feeds.</li>
+                </ol>
+            </div>
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <a href="mailto:support@careconnect.org?subject=NGO%20Verification%20Request" class="btn btn-primary full-width">Email Support Now</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation History Modal -->
+    <div id="donor-history-modal" class="modal hidden">
+        <div class="modal-content history-modal-content">
+            <span class="close-btn" id="close-donor-history-modal">&times;</span>
+            <h3>My Donation History</h3>
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">Review your previous donations and the organizations they supported.</p>
+            <div id="donor-history-list" class="history-list"></div>
+            <div id="donor-history-empty" class="empty-state hidden" style="margin-top: 1rem;">You have not made any donations yet.</div>
+        </div>
+    </div>
 
     <script type="module" src="script.js"></script>
 </body>

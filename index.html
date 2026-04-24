@@ -14,14 +14,28 @@
             <div class="nav-links">
                 <a href="index.html" class="active">Home</a>
                 <a href="donate.html">Donate</a>
+                <a href="ngo-dashboard.html" class="hidden">Dashboard</a>
                 <a href="about.html">About</a>
                 <a href="contact.html">Contact</a>
                 <span id="user-info" class="hidden"></span>
+                <button id="my-history-btn" class="btn btn-outline hidden">My History</button>
+                <button id="theme-toggle-btn" class="btn btn-outline nav-icon-btn" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">🌙</button>
                 <button id="nav-login-btn" class="btn btn-outline">Sign In / Sign Up</button>
                 <button id="nav-logout-btn" class="btn btn-outline hidden">Logout</button>
             </div>
         </div>
     </nav>
+
+    <!-- Donation History Modal -->
+    <div id="donor-history-modal" class="modal hidden">
+        <div class="modal-content history-modal-content">
+            <span class="close-btn" id="close-donor-history-modal">&times;</span>
+            <h3>My Donation History</h3>
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">Review your previous donations and the organizations they supported.</p>
+            <div id="donor-history-list" class="history-list"></div>
+            <div id="donor-history-empty" class="empty-state hidden" style="margin-top: 1rem;">You have not made any donations yet.</div>
+        </div>
+    </div>
 
     <main class="container page-shell">
         <section class="hero-section">
@@ -91,6 +105,11 @@
                     <h3 class="category-title">Money</h3>
                     <p>Fund urgent welfare programs.</p>
                 </button>
+                <button class="category-card" type="button" data-filter="education">
+                    <div class="category-icon">📚</div>
+                    <h3 class="category-title">Education</h3>
+                    <p>Donate books and stationary.</p>
+                </button>
             </div>
         </section>
 
@@ -149,6 +168,19 @@
                         <p class="ngo-location">Chennai, India</p>
                         <p class="ngo-desc">Funding student aid, food support, and emergency outreach programs.</p>
                         <a href="donate.html#money" class="btn btn-primary full-width">View Details</a>
+                    </div>
+                </article>
+
+                <article class="ngo-card" data-type="education money">
+                    <img class="ngo-image" src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=900&q=80" alt="Books and stationary donation" loading="lazy" decoding="async">
+                    <div class="ngo-content">
+                        <div class="ngo-header">
+                            <h3 class="ngo-name">Rural Literacy Initiative</h3>
+                            <span class="ngo-badge badge-urgency badge-medium">Medium</span>
+                        </div>
+                        <p class="ngo-location">Pune, India</p>
+                        <p class="ngo-desc">Providing textbooks and stationary kits to students in rural district schools.</p>
+                        <a href="donate.html#education" class="btn btn-primary full-width">View Details</a>
                     </div>
                 </article>
             </div>
