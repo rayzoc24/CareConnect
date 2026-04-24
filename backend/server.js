@@ -8,6 +8,9 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.get('/', (req, res) => {
+    res.send('CareConnect AI Backend Running 🚀');
+});
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
