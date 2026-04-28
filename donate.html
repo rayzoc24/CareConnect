@@ -30,7 +30,7 @@
         <div class="header-section">
             <h2 id="feed-title">Donation Centers & NGOs</h2>
             <p id="feed-subtitle">Find verified organizations based on what you want to donate.</p>
-            <div class="donation-nav">
+            <div class="donation-nav" id="donation-nav">
                 <a href="#food">Food</a>
                 <a href="#clothes">Clothes</a>
                 <a href="#blood">Blood</a>
@@ -40,7 +40,7 @@
         </div>
 
         <section id="food" class="donation-category-section">
-            <h2 class="section-title">Food Donations</h2>
+            <h2 class="section-title" id="food-title">Food Donations</h2>
             <div id="food-feed" class="ngo-grid">
                 <!-- NGOs injected here -->
             </div>
@@ -48,7 +48,7 @@
         </section>
 
         <section id="clothes" class="donation-category-section">
-            <h2 class="section-title">Clothes Donations</h2>
+            <h2 class="section-title" id="clothes-title">Clothes Donations</h2>
             <div id="clothes-feed" class="ngo-grid">
                 <!-- NGOs injected here -->
             </div>
@@ -56,7 +56,7 @@
         </section>
 
         <section id="blood" class="donation-category-section">
-            <h2 class="section-title">Blood Donation Camps</h2>
+            <h2 class="section-title" id="blood-title">Blood Donation Camps</h2>
             <div id="blood-feed" class="ngo-grid">
                 <!-- NGOs injected here -->
             </div>
@@ -64,7 +64,7 @@
         </section>
 
         <section id="money" class="donation-category-section">
-            <h2 class="section-title">Money Donations</h2>
+            <h2 class="section-title" id="money-title">Money Donations</h2>
             <div id="money-feed" class="ngo-grid">
                 <!-- NGOs injected here -->
             </div>
@@ -72,7 +72,7 @@
         </section>
 
         <section id="education" class="donation-category-section">
-            <h2 class="section-title">Education Donations (Books/Stationary)</h2>
+            <h2 class="section-title" id="education-title">Education Donations (Books/Stationary)</h2>
             <div id="education-feed" class="ngo-grid">
                 <!-- NGOs injected here -->
             </div>
@@ -83,6 +83,25 @@
              <button id="load-sample-btn" class="btn btn-primary">Load Sample NGOs</button>
         </div>
     </main>
+
+    <!-- Connect Confirmation Modal -->
+    <div id="connect-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" id="close-connect-modal">&times;</span>
+            <h3>Connect with NGO</h3>
+            <p id="connect-confirm-text" style="margin: 1rem 0; color: var(--text-muted);">
+                Are you sure you want to connect with this NGO to collaborate on the same cause?
+            </p>
+            <input type="hidden" id="connect-ngo-id">
+            <input type="hidden" id="connect-ngo-name">
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button id="connect-confirm-btn" class="btn btn-primary" style="flex: 1;">Confirm</button>
+                <button id="connect-cancel-btn" class="btn btn-outline" style="flex: 1;">Cancel</button>
+            </div>
+            <div id="connect-error" class="error-msg hidden" style="margin-top: 1rem;"></div>
+            <div id="connect-success" class="success-msg hidden" style="margin-top: 1rem;">Connection request sent successfully!</div>
+        </div>
+    </div>
 
     <!-- Auth Modal -->
     <div id="auth-modal" class="modal hidden">

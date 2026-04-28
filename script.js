@@ -82,6 +82,16 @@ const goodsDonateType = document.getElementById('goods-donate-type');
 const goodsError = document.getElementById('goods-error');
 const goodsSuccess = document.getElementById('goods-success');
 
+// Connect Modal DOM
+const connectModal = document.getElementById('connect-modal');
+const closeConnectModal = document.getElementById('close-connect-modal');
+const connectNgoIdInput = document.getElementById('connect-ngo-id');
+const connectNgoNameInput = document.getElementById('connect-ngo-name');
+const connectConfirmBtn = document.getElementById('connect-confirm-btn');
+const connectCancelBtn = document.getElementById('connect-cancel-btn');
+const connectError = document.getElementById('connect-error');
+const connectSuccess = document.getElementById('connect-success');
+
 // NGO Dashboard DOM
 const ngoProfileView = document.getElementById('ngo-profile-view');
 const needsForm = document.getElementById('needs-form');
@@ -99,6 +109,8 @@ const donorHistoryList = document.getElementById('donor-history-list');
 const donorHistoryEmpty = document.getElementById('donor-history-empty');
 const pastDrivesList = document.getElementById('past-drives-list');
 const pastDrivesEmpty = document.getElementById('past-drives-empty');
+const jointProgramsList = document.getElementById('joint-programs-list');
+const jointProgramsEmpty = document.getElementById('joint-programs-empty');
 
 // Homepage DOM
 const urgentNeedsGrid = document.getElementById('urgent-needs-grid');
@@ -503,6 +515,48 @@ function updateNavbarForRole(role) {
     }
 }
 
+// Update donate page for NGO role - change labels to "Connect"
+function updateDonatePageForNGO(isNGO) {
+    const feedTitle = document.getElementById('feed-title');
+    const feedSubtitle = document.getElementById('feed-subtitle');
+    const donationNav = document.getElementById('donation-nav');
+    
+    // Update header
+    if (feedTitle) {
+        feedTitle.textContent = isNGO ? 'Connect with NGOs' : 'Donation Centers & NGOs';
+    }
+    if (feedSubtitle) {
+        feedSubtitle.textContent = isNGO ? 'Find verified organizations to connect and collaborate with.' : 'Find verified organizations based on what you want to donate.';
+    }
+    
+    // Update section titles
+    const sectionTitles = {
+        'food-title': { ngo: 'Food Connections', user: 'Food Donations' },
+        'clothes-title': { ngo: 'Clothes Connections', user: 'Clothes Donations' },
+        'blood-title': { ngo: 'Blood Donation Camps', user: 'Blood Donation Camps' },
+        'money-title': { ngo: 'Money Connections', user: 'Money Donations' },
+        'education-title': { ngo: 'Education Connections', user: 'Education Donations (Books/Stationary)' }
+    };
+    
+    for (const [id, texts] of Object.entries(sectionTitles)) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.textContent = isNGO ? texts.ngo : texts.user;
+        }
+    }
+    
+    // Update all rendered NGO card buttons
+    document.querySelectorAll('.donate-btn').forEach(btn => {
+        const type = btn.dataset.type || '';
+        btn.textContent = isNGO ? 'Connect' : `Donate ${type}`;
+    });
+    
+    // Update "Needs" label to "Causes" for NGO
+    document.querySelectorAll('.ngo-needs strong').forEach(label => {
+        label.textContent = isNGO ? 'Causes:' : 'Needs:';
+    });
+}
+
 // Auth State Observer
 // Pre-load from localStorage to prevent navbar flicker
 const storedUser = localStorage.getItem('careConnectUser');
@@ -516,6 +570,7 @@ if (storedUser) {
         navLoginBtn?.classList.add('hidden');
         navLogoutBtn?.classList.remove('hidden');
         updateNavbarForRole(role);
+        updateDonatePageForNGO(role === 'ngo');
     } catch(e) {}
 }
 
@@ -543,6 +598,7 @@ if (auth) {
                 }
 
                 updateNavbarForRole(currentRole);
+                updateDonatePageForNGO(currentRole === 'ngo');
                 loadPublicDataOnce();
 
                 // Route Protection
@@ -572,6 +628,7 @@ if (auth) {
             if(userInfo) userInfo.textContent = '';
             currentRole = null;
             updateNavbarForRole(null);
+            updateDonatePageForNGO(false);
             loadPublicDataOnce();
 
             const currentPath = window.location.pathname;
@@ -711,13 +768,13 @@ function renderNgoCard(id, data, type, container) {
             ${contactInfoHtml}
             
             <div class="ngo-needs">
-                <strong>Needs:</strong>
+                <strong>${currentRole === 'ngo' ? 'Causes:' : 'Needs:'}</strong>
                 <div>${needsHtml}</div>
             </div>
 
             ${progressHtml}
             
-                <button class="btn btn-outline full-width donate-btn" data-id="${id}" data-name="${data.name}">${currentRole === 'ngo' ? 'Connect' : `Donate ${type}`}</button>
+                <button class="btn btn-outline full-width donate-btn" data-id="${id}" data-name="${data.name}" data-type="${type}">${currentRole === 'ngo' ? 'Connect' : `Donate ${type}`}</button>
         </div>
     `;
 
@@ -726,7 +783,8 @@ function renderNgoCard(id, data, type, container) {
     // Add event listener to the newly created button
     card.querySelector('.donate-btn').addEventListener('click', (e) => {
         if (currentRole === 'ngo') {
-            openMailClient(data.email || 'support@careconnect.org', data.name);
+            // Open connection confirmation modal
+            openConnectModal(id, data.name);
             return;
         }
 
@@ -904,6 +962,102 @@ goodsDonateForm?.addEventListener('submit', async (e) => {
         goodsError.classList.remove('hidden');
     } finally {
         submitBtn.disabled = false;
+    }
+});
+
+// Connect Modal Functions for NGO-to-NGO connections
+function openConnectModal(ngoId, ngoName) {
+    if (!connectModal) return;
+    connectNgoIdInput.value = ngoId;
+    connectNgoNameInput.value = ngoName;
+    document.getElementById('connect-confirm-text').textContent = 
+        `Are you sure you want to connect with "${ngoName}" to collaborate on the same cause?`;
+    connectError.classList.add('hidden');
+    connectSuccess.classList.add('hidden');
+    connectModal.classList.remove('hidden');
+}
+
+function closeConnectModalFunc() {
+    if (connectModal) {
+        connectModal.classList.add('hidden');
+    }
+}
+
+// Connect modal event listeners
+closeConnectModal?.addEventListener('click', closeConnectModalFunc);
+connectCancelBtn?.addEventListener('click', closeConnectModalFunc);
+
+connectConfirmBtn?.addEventListener('click', async () => {
+    if (!currentUser || !db) {
+        alert("Please log in first.");
+        return;
+    }
+
+    const targetNgoId = connectNgoIdInput.value;
+    const targetNgoName = connectNgoNameInput.value;
+    const currentNgoId = currentUser.uid;
+
+    if (!targetNgoId || !targetNgoName) {
+        alert("Invalid NGO selection.");
+        return;
+    }
+
+    // Prevent connecting to self
+    if (targetNgoId === currentNgoId) {
+        alert("You cannot connect with yourself.");
+        return;
+    }
+
+    connectError.classList.add('hidden');
+    connectSuccess.classList.add('hidden');
+    connectConfirmBtn.disabled = true;
+
+    try {
+        // Check if connection already exists
+        const existingConnection = await getDocs(query(
+            collection(db, "ngo_connections"),
+            where("fromNgoId", "==", currentNgoId),
+            where("toNgoId", "==", targetNgoId)
+        ));
+
+        if (!existingConnection.empty) {
+            alert("You have already sent a connection request to this NGO.");
+            connectConfirmBtn.disabled = false;
+            return;
+        }
+
+        // Create connection request
+        await addDoc(collection(db, "ngo_connections"), {
+            fromNgoId: currentNgoId,
+            fromNgoName: currentRole === 'ngo' ? (currentUser.displayName || currentUser.email) : 'Unknown',
+            toNgoId: targetNgoId,
+            toNgoName: targetNgoName,
+            status: 'pending',
+            timestamp: new Date().toISOString()
+        });
+
+        connectSuccess.classList.remove('hidden');
+        connectConfirmBtn.disabled = true;
+        connectConfirmBtn.textContent = "Connected!";
+
+        // Close modal after delay
+        setTimeout(() => {
+            closeConnectModalFunc();
+        }, 2000);
+
+    } catch (error) {
+        console.error("Connection error:", error);
+        connectError.textContent = "Failed to send connection request. Please try again.";
+        connectError.classList.remove('hidden');
+    } finally {
+        connectConfirmBtn.disabled = false;
+    }
+});
+
+// Close connect modal when clicking outside
+connectModal?.addEventListener('click', (e) => {
+    if (e.target === connectModal) {
+        closeConnectModalFunc();
     }
 });
 
@@ -1213,6 +1367,86 @@ async function initNGODashboard() {
             }
         }
 
+        // Fetch Joint Programs (Connected NGOs)
+        if (jointProgramsList) {
+            try {
+                // Get connections where current NGO is the sender
+                const sentQuery = query(
+                    collection(db, "ngo_connections"),
+                    where("fromNgoId", "==", currentUser.uid)
+                );
+                const sentSnapshot = await getDocs(sentQuery);
+                
+                // Get connections where current NGO is the receiver
+                const receivedQuery = query(
+                    collection(db, "ngo_connections"),
+                    where("toNgoId", "==", currentUser.uid)
+                );
+                const receivedSnapshot = await getDocs(receivedQuery);
+
+                const connections = [];
+                
+                sentSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status === 'pending' || data.status === 'accepted') {
+                        connections.push({
+                            id: doc.id,
+                            ngoName: data.toNgoName,
+                            ngoId: data.toNgoId,
+                            status: data.status,
+                            timestamp: data.timestamp,
+                            direction: 'sent'
+                        });
+                    }
+                });
+
+                receivedSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status === 'pending' || data.status === 'accepted') {
+                        connections.push({
+                            id: doc.id,
+                            ngoName: data.fromNgoName,
+                            ngoId: data.fromNgoId,
+                            status: data.status,
+                            timestamp: data.timestamp,
+                            direction: 'received'
+                        });
+                    }
+                });
+
+                // Sort by timestamp
+                connections.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                jointProgramsList.innerHTML = '';
+                if (connections.length === 0) {
+                    jointProgramsEmpty?.classList.remove('hidden');
+                } else {
+                    jointProgramsEmpty?.classList.add('hidden');
+                    connections.forEach(conn => {
+                        const connItem = document.createElement('div');
+                        connItem.className = 'donation-item';
+                        const statusBadge = conn.status === 'accepted' ? 
+                            '<span class="ngo-badge badge-verified" style="background: var(--success);">Active</span>' :
+                            '<span class="ngo-badge badge-urgency badge-medium">Pending</span>';
+                        
+                        connItem.innerHTML = `
+                            <div class="donation-item-header">
+                                <span class="donation-type-badge">Connected NGO</span>
+                                ${statusBadge}
+                            </div>
+                            <div style="margin-bottom: 0.35rem;"><strong>NGO Name:</strong> ${conn.ngoName}</div>
+                            <div style="margin-bottom: 0.35rem;"><strong>Connected On:</strong> ${formatDisplayDate(conn.timestamp)}</div>
+                            <div><strong>Status:</strong> ${conn.status === 'accepted' ? 'Collaboration Active' : 'Awaiting Response'}</div>
+                        `;
+                        jointProgramsList.appendChild(connItem);
+                    });
+                }
+            } catch (e) {
+                console.error("Error fetching joint programs:", e);
+                jointProgramsList.innerHTML = '<p>Failed to load connections.</p>';
+            }
+        }
+
     } catch (e) {
         console.error("Dashboard init error", e);
     }
@@ -1389,7 +1623,8 @@ async function fetchUrgentNeeds() {
             applyImageFallback(cardImage, need.title || need.specificNeed);
             if (currentRole === 'ngo') {
                 card.querySelector('.connect-ngo-btn')?.addEventListener('click', () => {
-                    openMailClient(need.email || 'support@careconnect.org', need.name);
+                    // Open connection confirmation modal instead of directly opening email
+                    openConnectModal(need.ngoId || need.id, need.name);
                 });
             }
             urgentNeedsGrid.appendChild(card);
